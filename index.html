@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal da Liderança — ECGNow</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0b4e7d; --navy-mid: #1a6faa; --navy-light: #e8f4fd;
+    --text: #1a2535; --muted: #64748b; --border: #e2e8f0;
+    --bg: #f8fafc; --white: #fff;
+    --green: #16a34a; --red: #dc2626; --amber: #d97706;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  /* ── LOGIN ── */
+  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0b4e7d 0%, #1a6faa 100%); }
+  .login-box { background: var(--white); border-radius: 16px; padding: 40px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,.28); }
+  .login-logo { text-align: center; margin-bottom: 28px; }
+  .login-logo h1 { font-family: 'Montserrat', sans-serif; font-size: 1.9rem; font-weight: 800; color: var(--navy); }
+  .login-logo p { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .form-input, .form-select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: .9rem; font-family: inherit; color: var(--text); background: var(--white); transition: border .15s; }
+  .form-input:focus, .form-select:focus { outline: none; border-color: var(--navy-mid); box-shadow: 0 0 0 3px rgba(26,111,170,.12); }
+  .btn-login { width: 100%; padding: 12px; background: var(--navy); color: white; border: none; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s; }
+  .btn-login:hover { background: var(--navy-mid); }
+  .login-error { background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; font-size: .85rem; color: var(--red); margin-top: 10px; display: none; }
+
+  /* ── APP ── */
+  #app-screen { display: none; min-height: 100vh; }
+  .header { background: var(--navy); color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .header-brand { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.1rem; }
+  .header-brand span { font-size: .75rem; font-weight: 400; opacity: .75; margin-left: 8px; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .header-leader { font-size: .82rem; opacity: .9; }
+  .btn-sair { background: rgba(255,255,255,.15); border: none; color: white; padding: 5px 12px; border-radius: 6px; font-size: .78rem; cursor: pointer; font-family: inherit; transition: background .15s; }
+  .btn-sair:hover { background: rgba(255,255,255,.25); }
+
+  /* ── TABS ── */
+  .tabs-bar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; gap: 4px; overflow-x: auto; }
+  .tab-btn { padding: 14px 16px; border: none; background: none; font-family: inherit; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s; }
+  .tab-btn:hover { color: var(--navy); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  /* ── CONTENT ── */
+  .tab-content { display: none; padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* ── CARDS ── */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-family: 'Montserrat', sans-serif; font-size: .85rem; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 16px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .kpi-val { font-size: 1.8rem; font-weight: 800; color: var(--navy); line-height: 1; }
+  .kpi-lbl { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f1f5f9; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 10px 14px; text-align: left; }
+  td { padding: 11px 14px; border-top: 1px solid var(--border); font-size: .85rem; }
+  tr:hover td { background: #fafbfc; }
+  .badge { display: inline-block; border-radius: 20px; padding: 2px 10px; font-size: .72rem; font-weight: 700; }
+  .badge-ativo { background: #dcfce7; color: #15803d; }
+  .badge-inativo { background: #f1f5f9; color: var(--muted); }
+  .badge-clt { background: #dbeafe; color: #1d4ed8; }
+  .badge-pj { background: #fef9c3; color: #854d0e; }
+  .badge-estagio { background: #ede9fe; color: #6d28d9; }
+  .badge-aberta { background: #dcfce7; color: #15803d; }
+
+  /* ── SEARCH ── */
+  .search-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: .875rem; font-family: inherit; }
+  .search-input:focus { outline: none; border-color: var(--navy-mid); }
+
+  /* ── AUSENCIAS ── */
+  .ausencia-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ausencia-form .full { grid-column: 1 / -1; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-family: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: var(--navy-mid); }
+  .btn-outline { background: white; color: var(--navy); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--navy-mid); color: var(--navy-mid); }
+  .btn-danger { background: #fee2e2; color: var(--red); border: 1px solid #fecaca; }
+  .btn-danger:hover { background: #fecaca; }
+  .btn-sm { padding: 4px 10px; font-size: .78rem; }
+  .section-link { display: flex; align-items: center; gap: 12px; background: var(--navy-light); border: 1px solid #bfdbfe; border-radius: 10px; padding: 16px 20px; text-decoration: none; color: var(--navy); font-weight: 600; font-size: .9rem; transition: background .15s; }
+  .section-link:hover { background: #dbeafe; }
+  .section-link .icon { font-size: 1.5rem; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; font-size: .875rem; font-weight: 500; z-index: 9999; display: none; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+
+  /* ── LOADING ── */
+  .loading { text-align: center; color: var(--muted); padding: 32px; font-size: .875rem; }
+  .empty { text-align: center; color: var(--muted); padding: 32px; font-size: .875rem; }
+
+  /* ── ESAT ── */
+  .esat-period-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .esat-score { font-size: 2rem; font-weight: 800; }
+  .esat-bar-wrap { background: #e2e8f0; border-radius: 20px; height: 8px; margin: 8px 0; overflow: hidden; }
+  .esat-bar { height: 100%; border-radius: 20px; background: var(--navy-mid); transition: width .4s; }
+
+  /* ── CARGO DETAIL ── */
+  .cargo-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 10px; cursor: pointer; transition: box-shadow .15s; }
+  .cargo-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+  .cargo-detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .cargo-detail.open { display: block; }
+  .detail-section { margin-bottom: 14px; }
+  .detail-label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+
+  /* ── DIAS REMUNERADOS ── */
+  .dias-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 4px 10px; font-size: .78rem; font-weight: 700; color: #15803d; }
+  .dias-badge.esgotado { background: #fef2f2; border-color: #fca5a5; color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>ECGNOW</h1>
+      <p>Portal da Liderança</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Seu nome</label>
+      <select class="form-select" id="loginName">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">PIN</label>
+      <input type="password" class="form-input" id="loginPin" maxlength="4" placeholder="••••" inputmode="numeric">
+    </div>
+    <button class="btn-login" onclick="handleLogin()">Entrar</button>
+    <div class="login-error" id="loginError">PIN incorreto. Tente novamente.</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app-screen">
+  <div class="header">
+    <div class="header-brand">RH.ECGNow <span>Portal da Liderança</span></div>
+    <div class="header-right">
+      <span class="header-leader" id="headerLeader"></span>
+      <button class="btn-sair" onclick="handleLogout()">↩ Sair</button>
+    </div>
+  </div>
+
+  <div class="tabs-bar" id="tabsBar">
+    <button class="tab-btn active" onclick="showTab('time',this)">👥 Meu Time</button>
+    <button class="tab-btn" onclick="showTab('esat',this)">📊 e-SAT</button>
+    <button class="tab-btn" onclick="showTab('cargos',this)">📋 Cargos</button>
+    <button class="tab-btn" onclick="showTab('rs',this)">🔍 R&amp;S</button>
+    <button class="tab-btn" onclick="showTab('ausencias',this)">🗓️ Gestão de Ausências</button>
+    <button class="tab-btn" onclick="showTab('qrsday',this)">🗳️ QRS-Day</button>
+  </div>
+
+  <!-- MEU TIME -->
+  <div class="tab-content active" id="tab-time">
+    <div class="kpi-row" id="timeKpis"></div>
+    <div class="card">
+      <div class="card-title">👥 Colaboradores do Time</div>
+      <div class="search-bar">
+        <input class="search-input" id="timeSearch" placeholder="Buscar por nome, cargo..." oninput="filterTime()">
+        <select class="search-input" style="flex:0 0 160px" id="timeFiltroTipo" onchange="filterTime()">
+          <option value="">Todos os contratos</option>
+          <option>CLT</option><option>PJ</option><option>Estágio</option><option>Prolabore</option>
+        </select>
+        <select class="search-input" style="flex:0 0 140px" id="timeFiltroStatus" onchange="filterTime()">
+          <option value="">Todos</option>
+          <option value="ativo">Ativos</option>
+          <option value="inativo">Inativos</option>
+        </select>
+      </div>
+      <div id="timeWrap"><div class="loading">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- e-SAT -->
+  <div class="tab-content" id="tab-esat">
+    <div class="kpi-row" id="esatKpisLider"></div>
+    <div class="card">
+      <div class="card-title">📊 Histórico e-SAT do Time</div>
+      <div id="esatWrap"><div class="loading">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- CARGOS -->
+  <div class="tab-content" id="tab-cargos">
+    <div class="card">
+      <div class="card-title">📋 Descrições de Cargo</div>
+      <div class="search-bar">
+        <input class="search-input" id="cargosSearch" placeholder="Buscar por título do cargo..." oninput="filterCargos()">
+      </div>
+      <div id="cargosWrap"><div class="loading">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- R&S -->
+  <div class="tab-content" id="tab-rs">
+    <div class="card">
+      <div class="card-title">🔍 Processos Seletivos Abertos</div>
+      <div id="rsWrap"><div class="loading">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- GESTÃO DE AUSÊNCIAS -->
+  <div class="tab-content" id="tab-ausencias">
+    <div id="ausenciasContent"></div>
+  </div>
+
+  <!-- QRS-DAY -->
+  <div class="tab-content" id="tab-qrsday">
+    <div class="card">
+      <div class="card-title">🗳️ QRS-Day — Votação de Problemas</div>
+      <p style="color:var(--muted);font-size:.875rem;margin-bottom:16px">Acesse o painel de votação para registrar e votar nos problemas do QRS-Day.</p>
+      <a href="https://daniellefelipe-ui.github.io/problemasQRSday/" target="_blank" class="section-link" style="display:inline-flex">
+        <span class="icon">🗳️</span> Abrir painel QRS-Day
+      </a>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ================================================================
+// CONFIG
+// ================================================================
+const LEADERS = [
+  { id: 1,  name: 'Mayara Silva',      setor: 'Financeiro',               pin: '1703' },
+  { id: 2,  name: 'Bruno Maia',        setor: 'Operação Holter',          pin: '2080' },
+  { id: 3,  name: 'Danielle Felipe',   setor: 'Gente & Cultura',          pin: '1511', isAdmin: true },
+  { id: 4,  name: 'Renner Lariucci',   setor: 'Operação Holter',          pin: '1606' },
+  { id: 5,  name: 'Marco Bustamante',  setor: 'Gestão',                   pin: '1742' },
+  { id: 6,  name: 'Gabriel de Paula',  setor: 'Gestão',                   pin: '1603' },
+  { id: 7,  name: 'Vinicius Santos',   setor: 'Tecnologia da Informação', pin: '2317' },
+  { id: 8,  name: 'Rodrigo Aramis',    setor: 'Comercial',                pin: '1744' },
+  { id: 9,  name: 'Aline Silveira',    setor: 'Educação',                 pin: '1305' },
+  { id: 10, name: 'Barbara Braga',     setor: 'Sucesso do Cliente',       pin: '8954' },
+];
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyBopJe43OvWuA-vuHWGCTqQ_ApreNf_kWA',
+  authDomain: 'rh-ecgnow.firebaseapp.com',
+  projectId: 'rh-ecgnow',
+  storageBucket: 'rh-ecgnow.firebasestorage.app',
+  messagingSenderId: '130728187614',
+  appId: '1:130728187614:web:bb1fb39b10be2119c7d44f',
+});
+const db = firebase.firestore();
+
+const sb = supabase.createClient(
+  'https://mswlkjbswcufjkzeeqan.supabase.co',
+  'sb_publishable_2twX0swUquIvdWVc2-JMQQ_kjLEMwVb'
+);
+
+// ================================================================
+// STATE
+// ================================================================
+let S = { leader: null };
+let allColabs = [], allEsat = [], allCargos = [];
+
+// ================================================================
+// UTILS
+// ================================================================
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type === 'error' ? '#dc2626' : '#1e293b';
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('pt-BR');
+}
+
+function tipoBadge(t) {
+  const cls = { CLT: 'badge-clt', PJ: 'badge-pj', Estágio: 'badge-estagio', Prolabore: 'badge-pj' };
+  return `<span class="badge ${cls[t] || 'badge-pj'}">${t || '—'}</span>`;
+}
+
+// ================================================================
+// LOGIN
+// ================================================================
+(function populateSelect() {
+  const sel = document.getElementById('loginName');
+  LEADERS.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = l.name + ' — ' + l.setor;
+    sel.appendChild(opt);
+  });
+})();
+
+document.getElementById('loginPin').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+function handleLogin() {
+  const id  = parseInt(document.getElementById('loginName').value);
+  const pin = document.getElementById('loginPin').value.trim();
+  const err = document.getElementById('loginError');
+  const leader = LEADERS.find(l => l.id === id);
+  if (!leader || leader.pin !== pin) {
+    err.style.display = 'block';
+    document.getElementById('loginPin').value = '';
+    return;
+  }
+  err.style.display = 'none';
+  S.leader = leader;
+  localStorage.setItem('portal_leader', JSON.stringify(leader));
+  showApp();
+}
+
+function handleLogout() {
+  localStorage.removeItem('portal_leader');
+  S.leader = null;
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('loginPin').value = '';
+}
+
+(function checkSession() {
+  const saved = localStorage.getItem('portal_leader');
+  if (saved) {
+    try {
+      const l = JSON.parse(saved);
+      const valid = LEADERS.find(x => x.id === l.id && x.pin === l.pin);
+      if (valid) { S.leader = valid; showApp(); return; }
+    } catch(e) {}
+  }
+})();
+
+// ================================================================
+// APP INIT
+// ================================================================
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('headerLeader').textContent = S.leader.name + ' · ' + S.leader.setor;
+  loadTime();
+  loadEsat();
+  loadCargos();
+  loadRs();
+  renderAusencias();
+}
+
+// ================================================================
+// TABS
+// ================================================================
+function showTab(tab, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ================================================================
+// MEU TIME
+// ================================================================
+async function loadTime() {
+  try {
+    const snap = await db.collection('colaboradores').where('lider', '==', S.leader.name).get();
+    allColabs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTimeKpis();
+    renderTimeTable(allColabs);
+  } catch(e) {
+    document.getElementById('timeWrap').innerHTML = '<div class="empty">Erro ao carregar colaboradores.</div>';
+  }
+}
+
+function renderTimeKpis() {
+  const ativos   = allColabs.filter(c => /^ativ/i.test(c.status||'')).length;
+  const clt      = allColabs.filter(c => c.tipo_contrato === 'CLT').length;
+  const pj       = allColabs.filter(c => c.tipo_contrato === 'PJ').length;
+  const estagio  = allColabs.filter(c => c.tipo_contrato === 'Estágio').length;
+  document.getElementById('timeKpis').innerHTML = [
+    { v: ativos,  l: 'Ativos' },
+    { v: clt,     l: 'CLT' },
+    { v: pj,      l: 'PJ' },
+    { v: estagio, l: 'Estagiários' },
+  ].map(k => `<div class="kpi"><div class="kpi-val">${k.v}</div><div class="kpi-lbl">${k.l}</div></div>`).join('');
+}
+
+function renderTimeTable(list) {
+  const wrap = document.getElementById('timeWrap');
+  if (!list.length) { wrap.innerHTML = '<div class="empty">Nenhum colaborador encontrado com seu nome como líder.<br><small>Certifique-se de que o campo "Líder" está preenchido no Dashboard RH.</small></div>'; return; }
+  wrap.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>Contrato</th><th>Status</th><th>Admissão</th></tr></thead>
+    <tbody>${list.map(c => `<tr>
+      <td><strong>${c.nome}</strong>${c.email ? '<br><small style="color:var(--muted)">' + c.email + '</small>' : ''}</td>
+      <td>${c.cargo || '—'}</td>
+      <td>${c.setor || '—'}</td>
+      <td>${tipoBadge(c.tipo_contrato)}</td>
+      <td><span class="badge ${/^ativ/i.test(c.status||'') ? 'badge-ativo' : 'badge-inativo'}">${c.status || '—'}</span></td>
+      <td style="color:var(--muted)">${fmtDate(c.data_admissao)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function filterTime() {
+  const q    = document.getElementById('timeSearch').value.toLowerCase();
+  const tipo = document.getElementById('timeFiltroTipo').value;
+  const stat = document.getElementById('timeFiltroStatus').value.toLowerCase();
+  renderTimeTable(allColabs.filter(c => {
+    if (tipo && c.tipo_contrato !== tipo) return false;
+    if (stat === 'ativo'   && !/^ativ/i.test(c.status||'')) return false;
+    if (stat === 'inativo' &&  /^ativ/i.test(c.status||'')) return false;
+    return !q || (c.nome||'').toLowerCase().includes(q) || (c.cargo||'').toLowerCase().includes(q);
+  }));
+}
+
+// ================================================================
+// e-SAT
+// ================================================================
+async function loadEsat() {
+  try {
+    const snap = await db.collection('esat').where('lider', '==', S.leader.name).orderBy('ordem').get();
+    allEsat = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderEsatLider();
+  } catch(e) {
+    document.getElementById('esatWrap').innerHTML = '<div class="empty">Erro ao carregar e-SAT.</div>';
+  }
+}
+
+function renderEsatLider() {
+  const wrap = document.getElementById('esatWrap');
+  if (!allEsat.length) {
+    document.getElementById('esatKpisLider').innerHTML = '';
+    wrap.innerHTML = '<div class="empty">Nenhum período e-SAT encontrado com seu nome como líder.<br><small>Certifique-se de que o campo "Líder" está preenchido nos períodos e-SAT no Dashboard RH.</small></div>';
+    return;
+  }
+  const ultimo = allEsat[allEsat.length - 1];
+  const medias = allEsat.map(p => p.media || 0);
+  const mediaGeral = medias.reduce((a,b) => a+b, 0) / medias.length;
+  document.getElementById('esatKpisLider').innerHTML = [
+    { v: (ultimo.media||0).toFixed(2), l: 'Última média' },
+    { v: mediaGeral.toFixed(2),        l: 'Média geral' },
+    { v: (ultimo.pct_acima_meta||0).toFixed(0) + '%', l: '% acima da meta' },
+    { v: allEsat.length,               l: 'Períodos' },
+  ].map(k => `<div class="kpi"><div class="kpi-val">${k.v}</div><div class="kpi-lbl">${k.l}</div></div>`).join('');
+
+  wrap.innerHTML = allEsat.slice().reverse().map(p => {
+    const pct = Math.min(100, ((p.media||0) / 5) * 100);
+    const cor = (p.media||0) >= (p.meta||4.5) ? 'var(--green)' : 'var(--amber)';
+    const notasHtml = (p.notas || []).map(n =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem">
+        <span>${n.nome}</span>
+        <span style="font-weight:700;color:${n.nota >= (p.meta||4.5) ? 'var(--green)' : 'var(--amber)'}">${n.nota?.toFixed(1) ?? '—'}</span>
+      </div>`
+    ).join('');
+    return `<div class="esat-period-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:.9rem">${p.periodo}</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">Meta: ${p.meta} · ${p.total_respostas||0} respostas</div>
+        </div>
+        <div style="text-align:right">
+          <div class="esat-score" style="color:${cor}">${(p.media||0).toFixed(2)}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${(p.pct_acima_meta||0).toFixed(0)}% acima da meta</div>
+        </div>
+      </div>
+      <div class="esat-bar-wrap"><div class="esat-bar" style="width:${pct}%;background:${cor}"></div></div>
+      ${notasHtml ? `<details style="margin-top:10px"><summary style="cursor:pointer;font-size:.78rem;color:var(--muted)">Ver notas individuais</summary><div style="margin-top:8px">${notasHtml}</div></details>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// CARGOS
+// ================================================================
+async function loadCargos() {
+  try {
+    const snap = await db.collection('cargos').orderBy('titulo').get();
+    allCargos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderCargos(allCargos);
+  } catch(e) {
+    document.getElementById('cargosWrap').innerHTML = '<div class="empty">Erro ao carregar cargos.</div>';
+  }
+}
+
+function renderCargos(list) {
+  const wrap = document.getElementById('cargosWrap');
+  if (!list.length) { wrap.innerHTML = '<div class="empty">Nenhum cargo cadastrado.</div>'; return; }
+  wrap.innerHTML = list.map(c => `
+    <div class="cargo-card" onclick="toggleCargo('${c.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700;font-size:.9rem">${c.titulo || '—'}</div>
+          ${c.cargo_superior ? `<div style="font-size:.78rem;color:var(--muted);margin-top:2px">Reporta para: ${c.cargo_superior}</div>` : ''}
+        </div>
+        <span style="color:var(--muted);font-size:.8rem" id="cargo-arrow-${c.id}">▶</span>
+      </div>
+      <div class="cargo-detail" id="cargo-detail-${c.id}">
+        ${c.missao ? `<div class="detail-section"><div class="detail-label">Missão</div><p style="font-size:.83rem;line-height:1.7;color:var(--text)">${c.missao}</p></div>` : ''}
+        ${(c.responsabilidades||[]).length ? `<div class="detail-section"><div class="detail-label">Responsabilidades</div>${c.responsabilidades.map((r,i) => `<div style="font-size:.83rem;padding:6px 10px;background:var(--bg);border-radius:6px;margin-bottom:4px;border-left:3px solid var(--navy-mid)"><strong>${i+1}.</strong> ${r}</div>`).join('')}</div>` : ''}
+        ${c.pdf_url ? `<a href="${c.pdf_url}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-block;margin-top:8px;text-decoration:none">📄 Ver PDF completo</a>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function toggleCargo(id) {
+  const det = document.getElementById('cargo-detail-' + id);
+  const arr = document.getElementById('cargo-arrow-' + id);
+  det.classList.toggle('open');
+  arr.textContent = det.classList.contains('open') ? '▼' : '▶';
+}
+
+function filterCargos() {
+  const q = document.getElementById('cargosSearch').value.toLowerCase();
+  renderCargos(allCargos.filter(c => (c.titulo||'').toLowerCase().includes(q) || (c.cargo_superior||'').toLowerCase().includes(q)));
+}
+
+// ================================================================
+// R&S — PROCESSOS SELETIVOS
+// ================================================================
+async function loadRs() {
+  const wrap = document.getElementById('rsWrap');
+  try {
+    const { data: vagas } = await sb.from('vagas').select('*').eq('status', 'ativa').order('created_at', { ascending: false });
+    if (!vagas?.length) { wrap.innerHTML = '<div class="empty">Nenhuma vaga aberta no momento.</div>'; return; }
+    wrap.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Vaga</th><th>Departamento</th><th>Localização</th><th>Tipo</th><th>Abertura</th></tr></thead>
+      <tbody>${vagas.map(v => `<tr>
+        <td><strong>${v.titulo || '—'}</strong></td>
+        <td>${v.departamento || v.setor || '—'}</td>
+        <td>${v.localizacao || '—'}</td>
+        <td>${v.tipo_vaga ? `<span class="badge badge-aberta">${v.tipo_vaga}</span>` : '—'}</td>
+        <td style="color:var(--muted)">${fmtDate(v.created_at)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  } catch(e) {
+    wrap.innerHTML = '<div class="empty">Erro ao carregar vagas.</div>';
+  }
+}
+
+// ================================================================
+// GESTÃO DE AUSÊNCIAS
+// ================================================================
+let allAusencias = [];
+
+async function renderAusencias() {
+  const wrap = document.getElementById('ausenciasContent');
+  wrap.innerHTML = '<div class="loading">Carregando...</div>';
+
+  // Busca PJ do time
+  const pjTime = allColabs.filter(c => c.tipo_contrato === 'PJ' && /^ativ/i.test(c.status||''));
+  // Busca ausências salvas
+  try {
+    const snap = await db.collection('ausencias_pj').where('lider', '==', S.leader.name).orderBy('data_inicio', 'desc').get();
+    allAusencias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) { allAusencias = []; }
+
+  wrap.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <!-- CLT: link para portal de férias -->
+      <div class="card">
+        <div class="card-title">🏖️ Férias CLT</div>
+        <p style="color:var(--muted);font-size:.875rem;margin-bottom:16px">Aprovar ou reprovar solicitações de férias dos colaboradores CLT do seu time.</p>
+        <a href="https://daniellefelipe-ui.github.io/rh-ecgnow/portal.html" target="_blank" class="section-link">
+          <span class="icon">🏖️</span> Acessar Portal de Férias
+        </a>
+      </div>
+      <!-- PJ: ausências -->
+      <div class="card">
+        <div class="card-title">📋 Ausências PJ</div>
+        <p style="color:var(--muted);font-size:.875rem;margin-bottom:12px">Registre ausências e controle os dias de descanso remunerado dos colaboradores PJ.</p>
+        ${pjTime.length ? `
+          <form onsubmit="salvarAusencia(event)" style="margin-bottom:16px">
+            <div class="ausencia-form">
+              <div>
+                <label class="form-label">Colaborador</label>
+                <select class="form-select" id="ausColaborador" required>
+                  <option value="">Selecione...</option>
+                  ${pjTime.map(c => `<option value="${c.id}" data-nome="${c.nome}" data-admissao="${c.data_admissao||''}">${c.nome}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Tipo</label>
+                <select class="form-select" id="ausTipo" required>
+                  <option value="ausencia">Ausência</option>
+                  <option value="descanso_remunerado">Descanso Remunerado (5 dias/ano)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Data início</label>
+                <input type="date" class="form-input" id="ausInicio" required>
+              </div>
+              <div>
+                <label class="form-label">Data fim</label>
+                <input type="date" class="form-input" id="ausFim" required>
+              </div>
+              <div class="full">
+                <label class="form-label">Observação</label>
+                <input type="text" class="form-input" id="ausObs" placeholder="Opcional">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top:12px">Registrar</button>
+          </form>
+        ` : '<div class="empty" style="padding:12px">Nenhum colaborador PJ ativo no seu time.</div>'}
+      </div>
+    </div>
+    <div class="card" id="ausenciasHistoricoCard">
+      <div class="card-title">📅 Histórico de Ausências PJ</div>
+      <div id="ausenciasHistorico"></div>
+    </div>`;
+
+  renderAusenciasHistorico();
+}
+
+function renderAusenciasHistorico() {
+  const wrap = document.getElementById('ausenciasHistorico');
+  if (!allAusencias.length) { wrap.innerHTML = '<div class="empty">Nenhuma ausência registrada.</div>'; return; }
+
+  // Agrupa por colaborador para mostrar saldo de descanso remunerado
+  const porColab = {};
+  allAusencias.forEach(a => {
+    if (!porColab[a.colaborador_nome]) porColab[a.colaborador_nome] = [];
+    porColab[a.colaborador_nome].push(a);
+  });
+
+  wrap.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Colaborador</th><th>Tipo</th><th>Início</th><th>Fim</th><th>Dias</th><th>Obs</th><th></th></tr></thead>
+    <tbody>${allAusencias.map(a => `<tr>
+      <td><strong>${a.colaborador_nome}</strong></td>
+      <td><span class="badge ${a.tipo === 'descanso_remunerado' ? 'badge-clt' : 'badge-pj'}">${a.tipo === 'descanso_remunerado' ? '🌴 Descanso' : '📋 Ausência'}</span></td>
+      <td>${fmtDate(a.data_inicio)}</td>
+      <td>${fmtDate(a.data_fim)}</td>
+      <td><strong>${a.dias || '—'}</strong></td>
+      <td style="color:var(--muted)">${a.observacao || '—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="excluirAusencia('${a.id}')">✕</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>
+
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+    ${Object.entries(porColab).map(([nome, ausencias]) => {
+      const diasDesc = ausencias.filter(a => a.tipo === 'descanso_remunerado').reduce((s,a) => s + (a.dias||0), 0);
+      const esgotado = diasDesc >= 5;
+      return `<div class="dias-badge ${esgotado ? 'esgotado' : ''}">${nome}: ${diasDesc}/5 dias de descanso</div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function salvarAusencia(e) {
+  e.preventDefault();
+  const sel = document.getElementById('ausColaborador');
+  const opt = sel.options[sel.selectedIndex];
+  const nome = opt.getAttribute('data-nome');
+  const inicio = document.getElementById('ausInicio').value;
+  const fim    = document.getElementById('ausFim').value;
+  if (new Date(fim) < new Date(inicio)) { toast('Data fim deve ser após a data início', 'error'); return; }
+  const dias = Math.ceil((new Date(fim) - new Date(inicio)) / 86400000) + 1;
+  const tipo = document.getElementById('ausTipo').value;
+
+  // Verifica limite de descanso remunerado
+  if (tipo === 'descanso_remunerado') {
+    const jaUsados = allAusencias.filter(a => a.colaborador_nome === nome && a.tipo === 'descanso_remunerado').reduce((s,a) => s + (a.dias||0), 0);
+    if (jaUsados + dias > 5) { toast(`${nome} já tem ${jaUsados} dias de descanso usados. Limite: 5 dias/ano.`, 'error'); return; }
+  }
+
+  const payload = {
+    colaborador_id:   sel.value,
+    colaborador_nome: nome,
+    lider:            S.leader.name,
+    tipo,
+    data_inicio: inicio,
+    data_fim:    fim,
+    dias,
+    observacao: document.getElementById('ausObs').value.trim(),
+    criado_em: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  try {
+    await db.collection('ausencias_pj').add(payload);
+    toast('Ausência registrada!');
+    e.target.reset();
+    const snap = await db.collection('ausencias_pj').where('lider', '==', S.leader.name).orderBy('data_inicio', 'desc').get();
+    allAusencias = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAusenciasHistorico();
+  } catch(err) { toast('Erro: ' + err.message, 'error'); }
+}
+
+async function excluirAusencia(id) {
+  if (!confirm('Excluir este registro?')) return;
+  await db.collection('ausencias_pj').doc(id).delete();
+  allAusencias = allAusencias.filter(a => a.id !== id);
+  renderAusenciasHistorico();
+  toast('Removido.');
+}
+</script>
+</body>
+</html>
