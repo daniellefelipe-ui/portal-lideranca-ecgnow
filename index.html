@@ -181,6 +181,29 @@
   .desenv-detail { font-size: .82rem; color: var(--text); margin-top: 4px; }
   .desenv-delta { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; background: #f1f5f9; border-radius: 6px; padding: 2px 8px; margin-top: 4px; }
 
+  /* ── RS VAGAS CARDS ── */
+  .rs-vagas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .rs-vaga-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: all .15s; }
+  .rs-vaga-card:hover { border-color: var(--navy-mid); box-shadow: 0 4px 14px rgba(11,78,125,.1); transform: translateY(-1px); }
+
+  /* ── RS KANBAN ── */
+  .rs-kanban { display: flex; gap: 10px; align-items: flex-start; min-width: max-content; }
+  .rs-kcol { flex: 0 0 195px; border-radius: 10px; overflow: hidden; background: #f3f4f6; }
+  .rs-kcol-header { padding: 9px 12px; font-size: .72rem; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+  .rs-kcol-count { background: rgba(255,255,255,.6); border-radius: 20px; padding: 1px 7px; font-size: .7rem; }
+  .rs-kcol-cards { padding: 6px; display: flex; flex-direction: column; gap: 6px; min-height: 60px; }
+  .rs-kcard { background: white; border-radius: 7px; padding: 10px; cursor: pointer; border: 1px solid var(--border); transition: box-shadow .15s; }
+  .rs-kcard:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .rs-kcard-name { font-weight: 600; font-size: .82rem; margin-bottom: 3px; }
+  .rs-kcard-sub { font-size: .72rem; color: var(--muted); }
+  .rs-kcol-triagem .rs-kcol-header { background: #e5e7eb; color: #374151; }
+  .rs-kcol-analise_rh .rs-kcol-header { background: #dbeafe; color: #1d4ed8; }
+  .rs-kcol-entrevista_rh .rs-kcol-header { background: #ede9fe; color: #6d28d9; }
+  .rs-kcol-teste_pratico .rs-kcol-header { background: #ffedd5; color: #c2410c; }
+  .rs-kcol-entrevista_gestor .rs-kcol-header { background: #cffafe; color: #0e7490; }
+  .rs-kcol-aprovado .rs-kcol-header { background: #dcfce7; color: #15803d; }
+  .rs-kcol-reprovado .rs-kcol-header { background: #f3f4f6; color: var(--muted); }
+
   /* ── COLAB DETALHE MODAL ── */
   .colab-tabs { border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; gap: 2px; background: var(--white); flex-shrink: 0; }
   .colab-tab-btn { padding: 10px 14px; border: none; background: none; font-family: inherit; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s; }
@@ -278,9 +301,23 @@
 
   <!-- R&S -->
   <div class="tab-content" id="tab-rs">
-    <div class="card">
-      <div class="card-title">🔍 Processos Seletivos Abertos</div>
-      <div id="rsWrap"><div class="loading">Carregando...</div></div>
+    <!-- LISTA DE VAGAS -->
+    <div id="rsVagasView">
+      <div class="card">
+        <div class="card-title">🔍 Processos Seletivos do Seu Time</div>
+        <div id="rsWrap"><div class="loading">Carregando...</div></div>
+      </div>
+    </div>
+    <!-- DETALHE DA VAGA (Kanban) -->
+    <div id="rsCandidatosView" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button class="btn btn-outline btn-sm" onclick="voltarVagasRs()">← Voltar</button>
+        <div>
+          <div style="font-weight:700;font-size:1rem" id="rsVagaTitulo"></div>
+          <div style="font-size:.78rem;color:var(--muted)" id="rsVagaMeta"></div>
+        </div>
+      </div>
+      <div id="rsKanbanWrap" style="overflow-x:auto;padding-bottom:16px"></div>
     </div>
   </div>
 
@@ -810,6 +847,18 @@ function filterCargos() {
 // ================================================================
 // R&S — PROCESSOS SELETIVOS
 // ================================================================
+const RS_ETAPAS = [
+  { k: 'triagem',           l: 'Triagem' },
+  { k: 'analise_rh',        l: 'Análise RH' },
+  { k: 'entrevista_rh',     l: 'Entrevista RH' },
+  { k: 'teste_pratico',     l: 'Teste Prático' },
+  { k: 'entrevista_gestor', l: 'C/ Gestor' },
+  { k: 'aprovado',          l: 'Aprovado ✓' },
+  { k: 'reprovado',         l: 'Reprovado' },
+];
+
+let _rsVagaAtual = null;
+
 async function loadRs() {
   const wrap = document.getElementById('rsWrap');
   try {
@@ -818,27 +867,133 @@ async function loadRs() {
     const meuNome = S.leader.name.trim().toLowerCase();
     const minhasVagas = (vagas || []).filter(v => {
       const isLider = S.leader.isAdmin || (v.lider || '').trim().toLowerCase() === meuNome;
-      const isAberta = v.ativa !== false;
-      return isLider && isAberta;
+      return isLider && v.ativa !== false;
     });
     if (!minhasVagas.length) {
-      wrap.innerHTML = '<div class="empty">Nenhuma vaga aberta para o seu time no momento.<br><small>As vagas aparecem aqui quando o líder responsável for definido no painel R&S.</small></div>';
+      wrap.innerHTML = '<div class="empty">Nenhuma vaga aberta para o seu time.<br><small>As vagas aparecem aqui quando o líder for definido no painel R&S.</small></div>';
       return;
     }
-    wrap.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Vaga</th><th>Setor</th><th>Modalidade</th><th>Localização</th><th>Contrato</th><th>Abertura</th></tr></thead>
-      <tbody>${minhasVagas.map(v => `<tr>
-        <td><strong>${v.titulo || '—'}</strong></td>
-        <td>${v.setor || '—'}</td>
-        <td>${v.modalidade ? `<span class="badge badge-aberta">${v.modalidade}</span>` : '—'}</td>
-        <td style="color:var(--muted)">${v.localizacao || '—'}</td>
-        <td>${v.tipo_contrato || '—'}</td>
-        <td style="color:var(--muted)">${fmtDate(v.created_at)}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`;
+    // Busca contagem de candidatos por vaga
+    const ids = minhasVagas.map(v => v.id);
+    const { data: counts } = await sb.from('candidaturas').select('vaga_id').in('vaga_id', ids);
+    const cMap = {};
+    (counts || []).forEach(c => { cMap[c.vaga_id] = (cMap[c.vaga_id] || 0) + 1; });
+
+    wrap.innerHTML = `<div class="rs-vagas-grid">${minhasVagas.map(v => `
+      <div class="rs-vaga-card" onclick="abrirVagaRs('${v.id}', this)" data-vaga='${JSON.stringify(v).replace(/'/g,"&#39;")}'>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div style="font-weight:700;font-size:.9rem">${v.titulo || '—'}</div>
+          <span class="badge badge-aberta" style="flex-shrink:0;margin-left:8px">Aberta</span>
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">${[v.setor, v.modalidade, v.localizacao].filter(Boolean).join(' · ')}</div>
+        <div style="font-size:.82rem;color:var(--navy);font-weight:600">${cMap[v.id] || 0} candidato${(cMap[v.id]||0) !== 1 ? 's' : ''} →</div>
+      </div>`).join('')}</div>`;
   } catch(e) {
-    console.error('loadRs:', e);
     wrap.innerHTML = `<div class="empty">Erro ao carregar vagas.<br><small>${e.message}</small></div>`;
+  }
+}
+
+async function abrirVagaRs(vagaId, el) {
+  _rsVagaAtual = JSON.parse(el.dataset.vaga);
+  document.getElementById('rsVagaTitulo').textContent = _rsVagaAtual.titulo || '—';
+  document.getElementById('rsVagaMeta').textContent = [_rsVagaAtual.setor, _rsVagaAtual.modalidade, _rsVagaAtual.localizacao].filter(Boolean).join(' · ');
+  document.getElementById('rsVagasView').style.display = 'none';
+  document.getElementById('rsCandidatosView').style.display = 'block';
+  document.getElementById('rsKanbanWrap').innerHTML = '<div class="loading">Carregando candidatos...</div>';
+
+  const { data: cands } = await sb.from('candidaturas')
+    .select('id, nome, etapa, classificacao, pontuacao_total, analise')
+    .eq('vaga_id', vagaId)
+    .order('nome');
+
+  renderKanbanRs(cands || []);
+}
+
+function voltarVagasRs() {
+  document.getElementById('rsCandidatosView').style.display = 'none';
+  document.getElementById('rsVagasView').style.display = 'block';
+  _rsVagaAtual = null;
+}
+
+function renderKanbanRs(cands) {
+  const wrap = document.getElementById('rsKanbanWrap');
+  if (!cands.length) { wrap.innerHTML = '<div class="empty">Nenhum candidato nesta vaga.</div>'; return; }
+  const grupos = {};
+  RS_ETAPAS.forEach(e => grupos[e.k] = []);
+  cands.forEach(c => { const k = c.etapa || 'triagem'; if (grupos[k] !== undefined) grupos[k].push(c); else grupos['triagem'].push(c); });
+
+  wrap.innerHTML = `<div class="rs-kanban">${RS_ETAPAS.map(et => {
+    const lista = grupos[et.k] || [];
+    const cards = lista.map(c => {
+      const cl = c.classificacao || '';
+      const clCor = cl.includes('Alta') ? '#15803d' : cl.includes('Média') ? '#d97706' : cl.includes('Baixa') ? '#dc2626' : '#64748b';
+      return `<div class="rs-kcard" onclick="abrirCandidatoRs('${c.id}')">
+        <div class="rs-kcard-name">${c.nome || '—'}</div>
+        <div class="rs-kcard-sub" style="color:${clCor}">${cl || '—'}</div>
+        ${c.pontuacao_total ? `<div class="rs-kcard-sub">${c.pontuacao_total}%</div>` : ''}
+      </div>`;
+    }).join('');
+    return `<div class="rs-kcol rs-kcol-${et.k}">
+      <div class="rs-kcol-header">${et.l} <span class="rs-kcol-count">${lista.length}</span></div>
+      <div class="rs-kcol-cards">${cards || '<div style="font-size:.72rem;color:var(--muted);padding:6px">Vazio</div>'}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function abrirCandidatoRs(id) {
+  const { data: c } = await sb.from('candidaturas')
+    .select('id, nome, etapa, classificacao, pontuacao_total, analise, email, telefone, linkedin_url, cv_url, disc_perfil')
+    .eq('id', id).single();
+  if (!c) return;
+
+  const etapaAtual = RS_ETAPAS.find(e => e.k === c.etapa) || RS_ETAPAS[0];
+  const proximas = RS_ETAPAS.filter(e => e.k !== c.etapa);
+  const analise = c.analise || {};
+  const clCor = (c.classificacao||'').includes('Alta') ? 'var(--green)' : (c.classificacao||'').includes('Média') ? 'var(--amber)' : 'var(--red)';
+
+  // Abre modal de detalhe
+  document.getElementById('colabDetalheName').textContent = c.nome || '—';
+  document.getElementById('colabDetalheMeta').textContent = `${etapaAtual.l}${c.classificacao ? ' · ' + c.classificacao : ''}`;
+
+  // Reusa o modal de detalhe mas com conteúdo de candidato
+  document.getElementById('colabDetalheModal').classList.add('open');
+  document.querySelector('.colab-tabs').style.display = 'none';
+  document.querySelectorAll('.colab-tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('colabTab-pdi').classList.add('active');
+  document.getElementById('colabTab-pdi').innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      ${c.pontuacao_total ? `<div class="kpi" style="flex:1;min-width:100px"><div class="kpi-val" style="color:${clCor}">${c.pontuacao_total}%</div><div class="kpi-lbl">Compatibilidade</div></div>` : ''}
+      ${c.disc_perfil ? `<div class="kpi" style="flex:1;min-width:100px"><div class="kpi-val" style="font-size:1.2rem">${c.disc_perfil}</div><div class="kpi-lbl">Perfil DISC</div></div>` : ''}
+    </div>
+    ${analise.pontos_fortes ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--green)">Pontos fortes</div><p style="font-size:.85rem;line-height:1.6">${analise.pontos_fortes}</p></div>` : ''}
+    ${analise.pontos_atencao ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--amber)">Pontos de atenção</div><p style="font-size:.85rem;line-height:1.6">${analise.pontos_atencao}</p></div>` : ''}
+    ${analise.recomendacao ? `<div style="margin-bottom:16px"><div class="form-label2">Recomendação</div><p style="font-size:.85rem;line-height:1.6">${analise.recomendacao}</p></div>` : ''}
+    <div style="border-top:1px solid var(--border);padding-top:14px">
+      <div class="form-label2" style="margin-bottom:8px">Mover para etapa</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${proximas.map(e => `<button class="btn btn-outline btn-sm" onclick="moverEtapaRs('${c.id}','${e.k}','${e.l}')">${e.l}</button>`).join('')}
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="btn btn-outline btn-sm">📄 Ver CV</a>` : ''}
+      ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" class="btn btn-outline btn-sm">🔗 LinkedIn</a>` : ''}
+    </div>`;
+  // Guarda id para mover etapa
+  document.getElementById('colabDetalheModal').dataset.candidatoId = c.id;
+}
+
+async function moverEtapaRs(candidatoId, novaEtapa, novaEtapaLabel) {
+  const { error } = await sb.from('candidaturas').update({ etapa: novaEtapa }).eq('id', candidatoId);
+  if (error) { toast('Erro: ' + error.message, 'error'); return; }
+  toast(`Candidato movido para ${novaEtapaLabel}!`);
+  closeColabDetalhe();
+  document.querySelector('.colab-tabs').style.display = '';
+  // Recarrega o kanban
+  if (_rsVagaAtual) {
+    const { data: cands } = await sb.from('candidaturas')
+      .select('id, nome, etapa, classificacao, pontuacao_total, analise')
+      .eq('vaga_id', _rsVagaAtual.id).order('nome');
+    renderKanbanRs(cands || []);
   }
 }
 
@@ -1016,6 +1171,7 @@ function openColabDetalhe(c) {
 
 function closeColabDetalhe() {
   document.getElementById('colabDetalheModal').classList.remove('open');
+  document.querySelector('.colab-tabs').style.display = '';
   _colabAtual = null;
 }
 
