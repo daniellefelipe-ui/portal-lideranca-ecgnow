@@ -948,7 +948,7 @@ function renderKanbanRs(cands) {
 async function abrirCandidatoRs(id) {
   // Busca candidato + análise
   const { data: c, error: cErr } = await sb.from('candidaturas')
-    .select('id, nome, etapa, email, telefone, linkedin_url, cv_url, disc_perfil, analises_cv(*)')
+    .select('id, nome, etapa, email, telefone, linkedin, curriculo_url, disc_perfil, analises_cv(*)')
     .eq('id', id).single();
   if (cErr) { toast('Erro: ' + cErr.message, 'error'); console.error('[abrirCandidatoRs]', cErr); return; }
   if (!c) { toast('Candidato não encontrado', 'error'); return; }
@@ -1031,8 +1031,8 @@ async function abrirCandidatoRs(id) {
 
     <!-- Links -->
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="btn btn-outline btn-sm">📄 Ver CV</a>` : ''}
-      ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" class="btn btn-outline btn-sm">🔗 LinkedIn</a>` : ''}
+      ${c.curriculo_url ? `<a href="${c.curriculo_url}" target="_blank" class="btn btn-outline btn-sm">📄 Ver CV</a>` : ''}
+      ${c.linkedin ? `<a href="${c.linkedin}" target="_blank" class="btn btn-outline btn-sm">🔗 LinkedIn</a>` : ''}
     </div>`;
 
   document.getElementById('colabDetalheModal').dataset.candidatoId = c.id;
