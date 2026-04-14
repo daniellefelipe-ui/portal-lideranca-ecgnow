@@ -948,7 +948,7 @@ function renderKanbanRs(cands) {
 async function abrirCandidatoRs(id) {
   // Busca candidato + análise
   const { data: c, error: cErr } = await sb.from('candidaturas')
-    .select('id, nome, etapa, email, telefone, linkedin, curriculo_url, disc_perfil, analises_cv(*)')
+    .select('id, nome, etapa, email, telefone, linkedin, curriculo_url, disc_perfil, teste_ecg, analises_cv(*)')
     .eq('id', id).single();
   if (cErr) { toast('Erro: ' + cErr.message, 'error'); console.error('[abrirCandidatoRs]', cErr); return; }
   if (!c) { toast('Candidato não encontrado', 'error'); return; }
@@ -1009,6 +1009,29 @@ async function abrirCandidatoRs(id) {
     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
       <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Perguntas sugeridas para entrevista</div>
       <ol style="font-size:.83rem;line-height:1.8;padding-left:18px">${prgArr.map(p=>`<li>${p}</li>`).join('')}</ol>
+    </div>` : ''}
+
+    <!-- Resultado ECG -->
+    ${c.teste_ecg ? `
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:8px">🫀 Teste Prático ECG</div>
+      ${(()=>{
+        const ecg = c.teste_ecg;
+        const pct = ecg.total_pct ?? 0;
+        const aprovado = ecg.aprovado ?? pct >= 75;
+        const cor = aprovado ? 'var(--green)' : 'var(--red)';
+        const alertas = (ecg.questoes||[]).filter(q=>q.alerta);
+        return `<div style="background:${aprovado?'#f0fdf4':'#fef2f2'};border:1px solid ${aprovado?'#bbf7d0':'#fecaca'};border-radius:8px;padding:12px 16px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:1.4rem;font-weight:800;color:${cor}">${pct}%</span>
+            <span style="font-size:.875rem;font-weight:600;color:${cor}">${aprovado?'✅ Aprovado':'❌ Reprovado'}</span>
+            ${alertas.length ? `<span style="font-size:.75rem;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:2px 8px">⚠️ ${alertas.length} alerta${alertas.length>1?'s':''}</span>` : ''}
+            ${ecg.editado_marco ? `<span style="font-size:.72rem;background:#ede9fe;color:#6d28d9;border-radius:20px;padding:2px 8px">✏️ Revisado</span>` : ''}
+          </div>
+          ${alertas.length ? `<div style="margin-top:8px">${alertas.map(a=>`<div style="font-size:.78rem;color:#c2410c;margin-bottom:3px">Q${a.q}: ${a.alerta}</div>`).join('')}</div>` : ''}
+          ${ecg.comentario ? `<div style="margin-top:8px;font-size:.82rem;color:var(--muted);font-style:italic">"${ecg.comentario}"</div>` : ''}
+        </div>`;
+      })()}
     </div>` : ''}
 
     <!-- Avaliações -->
