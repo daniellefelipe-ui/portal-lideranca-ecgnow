@@ -815,20 +815,30 @@ async function loadRs() {
   try {
     const { data: vagas, error: vagasError } = await sb.from('vagas').select('*').order('created_at', { ascending: false });
     if (vagasError) throw vagasError;
-    const vagasAbertas = (vagas || []).filter(v => v.status && /^aberta|^ativa/i.test(v.status));
-    if (!vagasAbertas.length) { wrap.innerHTML = '<div class="empty">Nenhuma vaga aberta no momento.</div>'; return; }
+    const meuNome = S.leader.name.trim().toLowerCase();
+    const minhasVagas = (vagas || []).filter(v => {
+      const isLider = S.leader.isAdmin || (v.lider || '').trim().toLowerCase() === meuNome;
+      const isAberta = v.ativa !== false;
+      return isLider && isAberta;
+    });
+    if (!minhasVagas.length) {
+      wrap.innerHTML = '<div class="empty">Nenhuma vaga aberta para o seu time no momento.<br><small>As vagas aparecem aqui quando o líder responsável for definido no painel R&S.</small></div>';
+      return;
+    }
     wrap.innerHTML = `<div class="table-wrap"><table>
-      <thead><tr><th>Vaga</th><th>Departamento</th><th>Localização</th><th>Tipo</th><th>Abertura</th></tr></thead>
-      <tbody>${vagasAbertas.map(v => `<tr>
+      <thead><tr><th>Vaga</th><th>Setor</th><th>Modalidade</th><th>Localização</th><th>Contrato</th><th>Abertura</th></tr></thead>
+      <tbody>${minhasVagas.map(v => `<tr>
         <td><strong>${v.titulo || '—'}</strong></td>
-        <td>${v.departamento || v.setor || '—'}</td>
-        <td>${v.localizacao || '—'}</td>
-        <td>${v.tipo_vaga ? `<span class="badge badge-aberta">${v.tipo_vaga}</span>` : '—'}</td>
+        <td>${v.setor || '—'}</td>
+        <td>${v.modalidade ? `<span class="badge badge-aberta">${v.modalidade}</span>` : '—'}</td>
+        <td style="color:var(--muted)">${v.localizacao || '—'}</td>
+        <td>${v.tipo_contrato || '—'}</td>
         <td style="color:var(--muted)">${fmtDate(v.created_at)}</td>
       </tr>`).join('')}</tbody>
     </table></div>`;
   } catch(e) {
-    wrap.innerHTML = '<div class="empty">Erro ao carregar vagas.</div>';
+    console.error('loadRs:', e);
+    wrap.innerHTML = `<div class="empty">Erro ao carregar vagas.<br><small>${e.message}</small></div>`;
   }
 }
 
