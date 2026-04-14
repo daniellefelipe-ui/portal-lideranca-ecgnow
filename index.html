@@ -947,15 +947,22 @@ function renderKanbanRs(cands) {
 
 async function abrirCandidatoRs(id) {
   const { data: c } = await sb.from('candidaturas')
-    .select('id, nome, etapa, email, telefone, linkedin_url, cv_url, disc_perfil, analises_cv(classificacao, justificativa_classificacao, resumo_profissional, pontos_positivos, alertas)')
+    .select('id, nome, etapa, email, telefone, linkedin_url, cv_url, disc_perfil, analises_cv(*), avaliacoes(*)')
     .eq('id', id).single();
   if (!c) return;
 
   const etapaAtual = RS_ETAPAS.find(e => e.k === c.etapa) || RS_ETAPAS[0];
-  const proximas = RS_ETAPAS.filter(e => e.k !== c.etapa);
-  const analise = c.analises_cv || {};
-  const cl = analise.classificacao || '';
+  const proximas = RS_ETAPAS.filter(e => e.k !== c.etapa && e.k !== 'reprovado');
+  const an = c.analises_cv || {};
+  const cl = an.classificacao || '';
   const clCor = cl.includes('Alta') ? 'var(--green)' : cl.includes('Média') ? 'var(--amber)' : cl.includes('Baixa') ? 'var(--red)' : 'var(--muted)';
+  const posArr = Array.isArray(an.pontos_positivos) ? an.pontos_positivos : [];
+  const altArr = Array.isArray(an.alertas) ? an.alertas : [];
+  const prgArr = Array.isArray(an.perguntas_entrevista) ? an.perguntas_entrevista : [];
+  const avals = c.avaliacoes || [];
+  const avalRH = avals.find(a => a.tipo === 'entrevista_rh');
+  const avalTP = avals.find(a => a.tipo === 'teste_pratico');
+  const avalGT = avals.find(a => a.tipo === 'gestor');
 
   document.getElementById('colabDetalheName').textContent = c.nome || '—';
   document.getElementById('colabDetalheMeta').textContent = `${etapaAtual.l}${cl ? ' · ' + cl : ''}`;
@@ -965,29 +972,64 @@ async function abrirCandidatoRs(id) {
   document.querySelectorAll('.colab-tab-content').forEach(el => el.classList.remove('active'));
   document.getElementById('colabTab-pdi').classList.add('active');
 
-  const posArr = Array.isArray(analise.pontos_positivos) ? analise.pontos_positivos : [];
-  const altArr = Array.isArray(analise.alertas) ? analise.alertas : [];
+  const scoreBox = (label, aval) => aval ? `
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase">${label}</span>
+        ${aval.pontuacao_media != null ? `<span style="font-size:1.1rem;font-weight:800;color:var(--navy)">${aval.pontuacao_media}/5</span>` : ''}
+      </div>
+      ${aval.registro ? `<p style="font-size:.82rem;line-height:1.6;color:var(--text)">${aval.registro}</p>` : ''}
+    </div>` : '';
 
   document.getElementById('colabTab-pdi').innerHTML = `
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-      ${cl ? `<div class="kpi" style="flex:1;min-width:120px"><div class="kpi-val" style="font-size:1rem;color:${clCor}">${cl}</div><div class="kpi-lbl">Classificação</div></div>` : ''}
-      ${c.disc_perfil ? `<div class="kpi" style="flex:1;min-width:100px"><div class="kpi-val" style="font-size:1.2rem">${c.disc_perfil}</div><div class="kpi-lbl">Perfil DISC</div></div>` : ''}
+    <!-- KPIs -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      ${cl ? `<div class="kpi" style="flex:1;min-width:130px"><div class="kpi-val" style="font-size:.9rem;color:${clCor};line-height:1.3">${cl}</div><div class="kpi-lbl">Classificação</div></div>` : ''}
+      ${c.disc_perfil ? `<div class="kpi" style="flex:1;min-width:80px"><div class="kpi-val" style="font-size:1.2rem">${c.disc_perfil}</div><div class="kpi-lbl">Perfil DISC</div></div>` : ''}
+      ${c.email ? `<div class="kpi" style="flex:2;min-width:160px"><div class="kpi-val" style="font-size:.78rem;font-weight:600">${c.email}</div><div class="kpi-lbl">E-mail</div></div>` : ''}
     </div>
-    ${analise.resumo_profissional ? `<div style="margin-bottom:12px"><div class="form-label2">Resumo</div><p style="font-size:.85rem;line-height:1.6">${analise.resumo_profissional}</p></div>` : ''}
-    ${posArr.length ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--green)">Pontos positivos</div><ul style="font-size:.85rem;line-height:1.7;padding-left:16px">${posArr.map(p=>`<li>${p}</li>`).join('')}</ul></div>` : ''}
-    ${altArr.length ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--amber)">Alertas</div><ul style="font-size:.85rem;line-height:1.7;padding-left:16px">${altArr.map(a=>`<li>${a}</li>`).join('')}</ul></div>` : ''}
-    ${analise.justificativa_classificacao ? `<div style="margin-bottom:16px"><div class="form-label2">Justificativa</div><p style="font-size:.85rem;line-height:1.6">${analise.justificativa_classificacao}</p></div>` : ''}
-    ${!cl && !analise.resumo_profissional ? `<div style="text-align:center;padding:20px;color:var(--muted);font-size:.85rem">Currículo ainda não analisado</div>` : ''}
-    <div style="border-top:1px solid var(--border);padding-top:14px">
-      <div class="form-label2" style="margin-bottom:8px">Mover para etapa</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+
+    <!-- Análise de CV -->
+    ${an.resumo_profissional || posArr.length || altArr.length ? `
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Análise de Currículo</div>
+      ${an.resumo_profissional ? `<p style="font-size:.84rem;line-height:1.6;margin-bottom:10px">${an.resumo_profissional}</p>` : ''}
+      ${posArr.length ? `<div style="margin-bottom:8px"><div style="font-size:.72rem;font-weight:700;color:var(--green);margin-bottom:4px">PONTOS POSITIVOS</div><ul style="font-size:.83rem;line-height:1.7;padding-left:16px">${posArr.map(p=>`<li>${p}</li>`).join('')}</ul></div>` : ''}
+      ${altArr.length ? `<div style="margin-bottom:8px"><div style="font-size:.72rem;font-weight:700;color:var(--amber);margin-bottom:4px">ALERTAS</div><ul style="font-size:.83rem;line-height:1.7;padding-left:16px">${altArr.map(a=>`<li>${a}</li>`).join('')}</ul></div>` : ''}
+      ${an.justificativa_classificacao ? `<div style="font-size:.82rem;color:var(--muted);font-style:italic;margin-top:6px">${an.justificativa_classificacao}</div>` : ''}
+    </div>` : (!cl ? `<div style="text-align:center;padding:16px;color:var(--muted);font-size:.85rem;margin-bottom:14px">Currículo ainda não analisado pelo agente</div>` : '')}
+
+    <!-- Perguntas sugeridas -->
+    ${prgArr.length ? `
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Perguntas sugeridas para entrevista</div>
+      <ol style="font-size:.83rem;line-height:1.8;padding-left:18px">${prgArr.map(p=>`<li>${p}</li>`).join('')}</ol>
+    </div>` : ''}
+
+    <!-- Avaliações -->
+    ${(avalRH || avalTP || avalGT) ? `
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Avaliações</div>
+      ${scoreBox('Entrevista RH', avalRH)}
+      ${scoreBox('Teste Prático', avalTP)}
+      ${scoreBox('Entrevista c/ Gestor', avalGT)}
+    </div>` : ''}
+
+    <!-- Mover etapa -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Mover para etapa</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
         ${proximas.map(e => `<button class="btn btn-outline btn-sm" onclick="moverEtapaRs('${c.id}','${e.k}','${e.l}')">${e.l}</button>`).join('')}
+        <button class="btn btn-danger btn-sm" onclick="moverEtapaRs('${c.id}','reprovado','Reprovado')">Reprovar</button>
       </div>
     </div>
-    <div style="margin-top:12px;display:flex;gap:8px">
+
+    <!-- Links -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
       ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="btn btn-outline btn-sm">📄 Ver CV</a>` : ''}
       ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" class="btn btn-outline btn-sm">🔗 LinkedIn</a>` : ''}
     </div>`;
+
   document.getElementById('colabDetalheModal').dataset.candidatoId = c.id;
 }
 
@@ -1000,7 +1042,7 @@ async function moverEtapaRs(candidatoId, novaEtapa, novaEtapaLabel) {
   // Recarrega o kanban
   if (_rsVagaAtual) {
     const { data: cands } = await sb.from('candidaturas')
-      .select('id, nome, etapa, classificacao, pontuacao_total, analise')
+      .select('id, nome, etapa, disc_perfil, analises_cv(classificacao)')
       .eq('vaga_id', _rsVagaAtual.id).order('nome');
     renderKanbanRs(cands || []);
   }
