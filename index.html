@@ -424,10 +424,41 @@ function filterTime() {
 // ================================================================
 async function loadEsat() {
   try {
-    const snap = await db.collection('esat').where('lider', '==', S.leader.name).orderBy('ordem').get();
-    allEsat = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Monta mapa nome -> lider a partir dos colaboradores
+    const colabSnap = await db.collection('colaboradores').get();
+    const liderMap = {};
+    colabSnap.forEach(d => {
+      const c = d.data();
+      if (c.nome) liderMap[c.nome.trim().toLowerCase()] = (c.lider || '').trim().toLowerCase();
+    });
+
+    // Carrega todos os períodos e filtra as notas pelo líder logado
+    const snap = await db.collection('esat').orderBy('ordem').get();
+    const meuNome = S.leader.name.trim().toLowerCase();
+    allEsat = [];
+    snap.forEach(d => {
+      const r = { id: d.id, ...d.data() };
+      const minhasNotas = (r.notas || []).filter(n => {
+        const nomeLower = (n.nome || '').trim().toLowerCase();
+        return liderMap[nomeLower] === meuNome;
+      });
+      if (minhasNotas.length > 0) {
+        // Recalcula média e % acima da meta apenas para os colaboradores deste líder
+        const vals = minhasNotas.map(n => parseFloat(n.nota) || 0);
+        const media = vals.reduce((a,b) => a+b, 0) / vals.length;
+        const acima = vals.filter(v => v >= (r.meta || 4.5)).length;
+        allEsat.push({
+          ...r,
+          notas: minhasNotas,
+          media: parseFloat(media.toFixed(2)),
+          pct_acima_meta: parseFloat((acima / vals.length * 100).toFixed(1)),
+          total_respostas: vals.length,
+        });
+      }
+    });
     renderEsatLider();
   } catch(e) {
+    console.error(e);
     document.getElementById('esatWrap').innerHTML = '<div class="empty">Erro ao carregar e-SAT.</div>';
   }
 }
@@ -436,7 +467,7 @@ function renderEsatLider() {
   const wrap = document.getElementById('esatWrap');
   if (!allEsat.length) {
     document.getElementById('esatKpisLider').innerHTML = '';
-    wrap.innerHTML = '<div class="empty">Nenhum período e-SAT encontrado com seu nome como líder.<br><small>Certifique-se de que o campo "Líder" está preenchido nos períodos e-SAT no Dashboard RH.</small></div>';
+    wrap.innerHTML = '<div class="empty">Nenhum dado e-SAT encontrado para o seu time.<br><small>Certifique-se de que o campo "Líder" está preenchido nos colaboradores no Dashboard RH.</small></div>';
     return;
   }
   const ultimo = allEsat[allEsat.length - 1];
