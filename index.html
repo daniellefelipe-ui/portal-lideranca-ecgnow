@@ -118,6 +118,67 @@
   /* ── DIAS REMUNERADOS ── */
   .dias-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 4px 10px; font-size: .78rem; font-weight: 700; color: #15803d; }
   .dias-badge.esgotado { background: #fef2f2; border-color: #fca5a5; color: var(--red); }
+
+  /* ── PDI ── */
+  .pdi-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .pdi-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .pdi-objetivo { font-weight: 700; font-size: .9rem; }
+  .pdi-colab { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .pdi-progress-wrap { background: #e2e8f0; border-radius: 20px; height: 8px; margin: 10px 0 4px; overflow: hidden; }
+  .pdi-progress-bar { height: 100%; border-radius: 20px; background: var(--navy-mid); transition: width .4s; }
+  .pdi-pct { font-size: .72rem; color: var(--muted); text-align: right; }
+  .pdi-tarefas { margin-top: 10px; }
+  .pdi-tarefa-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border); font-size: .82rem; }
+  .pdi-tarefa-row input[type=checkbox] { margin-top: 2px; flex-shrink: 0; cursor: pointer; width: 15px; height: 15px; }
+  .pdi-tarefa-done { text-decoration: line-through; color: var(--muted); }
+  .pdi-tarefa-info { flex: 1; }
+  .pdi-tarefa-dates { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: var(--white); border-radius: 14px; width: 100%; max-width: 680px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  .modal-head { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  .modal-head h3 { font-family: 'Montserrat', sans-serif; font-size: .95rem; font-weight: 700; color: var(--navy); }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+  .modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
+  .form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid2 .full { grid-column: 1 / -1; }
+  .form-label2 { display: block; font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+  .form-input2, .form-select2, .form-textarea2 { width: 100%; padding: 8px 11px; border: 1px solid var(--border); border-radius: 7px; font-size: .875rem; font-family: inherit; color: var(--text); background: var(--white); }
+  .form-input2:focus, .form-select2:focus, .form-textarea2:focus { outline: none; border-color: var(--navy-mid); box-shadow: 0 0 0 3px rgba(26,111,170,.1); }
+  .form-textarea2 { resize: vertical; min-height: 70px; }
+  .tarefa-add-row { border: 1px dashed var(--border); border-radius: 8px; padding: 12px; margin-bottom: 10px; position: relative; }
+  .tarefa-remove-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; }
+  .tarefa-remove-btn:hover { color: var(--red); }
+
+  /* ── FEEDBACK ── */
+  .fb-card { border-left: 4px solid var(--navy-mid); border-radius: 0 10px 10px 0; background: var(--white); border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 14px 16px; margin-bottom: 10px; }
+  .fb-card.positivo { border-left-color: var(--green); }
+  .fb-card.construtivo { border-left-color: var(--amber); }
+  .fb-card.desenvolvimento { border-left-color: #7c3aed; }
+  .fb-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .fb-tipo-badge { padding: 2px 10px; border-radius: 20px; font-size: .7rem; font-weight: 700; }
+  .fb-tipo-positivo { background: #dcfce7; color: #15803d; }
+  .fb-tipo-construtivo { background: #fef3c7; color: #92400e; }
+  .fb-tipo-desenvolvimento { background: #ede9fe; color: #5b21b6; }
+  .fb-colab { font-weight: 700; font-size: .85rem; }
+  .fb-date { font-size: .75rem; color: var(--muted); }
+  .fb-acao { font-size: .78rem; color: var(--muted); font-style: italic; margin-bottom: 6px; }
+  .fb-desc { font-size: .875rem; line-height: 1.5; }
+
+  /* ── DESENVOLVIMENTO ── */
+  .desenv-card { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .desenv-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+  .desenv-icon.promocao { background: #dcfce7; }
+  .desenv-icon.reajuste { background: #dbeafe; }
+  .desenv-icon.cargo { background: #fef3c7; }
+  .desenv-icon.reconhecimento { background: #ede9fe; }
+  .desenv-icon.outro { background: #f1f5f9; }
+  .desenv-body { flex: 1; }
+  .desenv-title { font-weight: 700; font-size: .88rem; }
+  .desenv-colab { font-size: .78rem; color: var(--muted); }
+  .desenv-date { font-size: .75rem; color: var(--muted); }
+  .desenv-detail { font-size: .82rem; color: var(--text); margin-top: 4px; }
+  .desenv-delta { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; background: #f1f5f9; border-radius: 6px; padding: 2px 8px; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -160,6 +221,9 @@
     <button class="tab-btn" onclick="showTab('cargos',this)">📋 Cargos</button>
     <button class="tab-btn" onclick="showTab('rs',this)">🔍 R&amp;S</button>
     <button class="tab-btn" onclick="showTab('ausencias',this)">🗓️ Gestão de Ausências</button>
+    <button class="tab-btn" onclick="showTab('pdi',this)">📈 PDI</button>
+    <button class="tab-btn" onclick="showTab('feedback',this)">💬 Feedback</button>
+    <button class="tab-btn" onclick="showTab('desenvolvimento',this)">🚀 Desenvolvimento</button>
     <button class="tab-btn" onclick="showTab('qrsday',this)">🗳️ QRS-Day</button>
   </div>
 
@@ -217,6 +281,68 @@
     <div id="ausenciasContent"></div>
   </div>
 
+  <!-- PDI -->
+  <div class="tab-content" id="tab-pdi">
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📈 Planos de Desenvolvimento Individual</span>
+        <button class="btn btn-primary btn-sm" onclick="openPdiModal()">+ Novo PDI</button>
+      </div>
+      <div class="search-bar">
+        <input class="search-input" id="pdiSearch" placeholder="Buscar por colaborador ou objetivo..." oninput="filterPdi()">
+        <select class="search-input" style="flex:0 0 180px" id="pdiFiltroStatus" onchange="filterPdi()">
+          <option value="">Todos os status</option>
+          <option value="em_andamento">Em andamento</option>
+          <option value="concluido">Concluídos</option>
+        </select>
+      </div>
+      <div id="pdiWrap"><div class="loading">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="tab-content" id="tab-feedback">
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>💬 Registro de Feedbacks</span>
+        <button class="btn btn-primary btn-sm" onclick="openFeedbackModal()">+ Novo Feedback</button>
+      </div>
+      <div class="search-bar">
+        <input class="search-input" id="fbSearch" placeholder="Buscar por colaborador..." oninput="filterFeedbacks()">
+        <select class="search-input" style="flex:0 0 180px" id="fbFiltroTipo" onchange="filterFeedbacks()">
+          <option value="">Todos os tipos</option>
+          <option value="positivo">Positivo</option>
+          <option value="construtivo">Construtivo</option>
+          <option value="desenvolvimento">Desenvolvimento</option>
+        </select>
+      </div>
+      <div id="fbWrap"><div class="loading">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- DESENVOLVIMENTO -->
+  <div class="tab-content" id="tab-desenvolvimento">
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🚀 Histórico de Desenvolvimento</span>
+        <button class="btn btn-primary btn-sm" onclick="openDesenvModal()">+ Registrar</button>
+      </div>
+      <div class="search-bar">
+        <input class="search-input" id="desenvSearch" placeholder="Buscar por colaborador..." oninput="filterDesenv()">
+        <select class="search-input" style="flex:0 0 200px" id="desenvFiltroTipo" onchange="filterDesenv()">
+          <option value="">Todos os tipos</option>
+          <option value="Promoção">Promoção</option>
+          <option value="Reajuste Salarial">Reajuste Salarial</option>
+          <option value="Mudança de Cargo">Mudança de Cargo</option>
+          <option value="Reconhecimento">Reconhecimento</option>
+          <option value="Advertência">Advertência</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div id="desenvWrap"><div class="loading">Carregando...</div></div>
+    </div>
+  </div>
+
   <!-- QRS-DAY -->
   <div class="tab-content" id="tab-qrsday">
     <div class="card">
@@ -225,6 +351,141 @@
       <a href="https://daniellefelipe-ui.github.io/problemasQRSday/" target="_blank" class="section-link" style="display:inline-flex">
         <span class="icon">🗳️</span> Abrir painel QRS-Day
       </a>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PDI -->
+<div class="modal-overlay" id="pdiModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="pdiModalTitle">Novo PDI</h3>
+      <button class="btn btn-outline btn-sm" onclick="closePdiModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pdiId">
+      <div class="form-grid2">
+        <div class="full">
+          <label class="form-label2">Colaborador *</label>
+          <select class="form-select2" id="pdiColab"></select>
+        </div>
+        <div class="full">
+          <label class="form-label2">Objetivo do PDI *</label>
+          <input type="text" class="form-input2" id="pdiObjetivo" placeholder="Ex: Comunicação Eficaz em Apresentações Públicas">
+        </div>
+        <div>
+          <label class="form-label2">Supervisor</label>
+          <input type="text" class="form-input2" id="pdiSupervisor" placeholder="Nome do supervisor">
+        </div>
+        <div>
+          <label class="form-label2">Data de cadastro</label>
+          <input type="date" class="form-input2" id="pdiDataCadastro">
+        </div>
+      </div>
+      <div style="margin-top:18px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <label class="form-label2" style="margin:0">Tarefas / Atividades</label>
+          <button type="button" class="btn btn-outline btn-sm" onclick="pdiAddTarefa()">+ Tarefa</button>
+        </div>
+        <div id="pdiTarefasWrap"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closePdiModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePdi()">Salvar PDI</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FEEDBACK -->
+<div class="modal-overlay" id="fbModal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head">
+      <h3 id="fbModalTitle">Novo Feedback</h3>
+      <button class="btn btn-outline btn-sm" onclick="closeFbModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fbId">
+      <div class="form-grid2">
+        <div class="full">
+          <label class="form-label2">Colaborador *</label>
+          <select class="form-select2" id="fbColab"></select>
+        </div>
+        <div>
+          <label class="form-label2">Data *</label>
+          <input type="date" class="form-input2" id="fbData">
+        </div>
+        <div>
+          <label class="form-label2">Tipo *</label>
+          <select class="form-select2" id="fbTipo">
+            <option value="positivo">Positivo</option>
+            <option value="construtivo">Construtivo</option>
+            <option value="desenvolvimento">Desenvolvimento</option>
+          </select>
+        </div>
+        <div class="full">
+          <label class="form-label2">Contexto (Projeto / Papel / Responsabilidade)</label>
+          <input type="text" class="form-input2" id="fbAcao" placeholder="Ex: Apresentação para o board, Projeto X...">
+        </div>
+        <div class="full">
+          <label class="form-label2">Feedback *</label>
+          <textarea class="form-textarea2" id="fbDescricao" rows="4" placeholder="Descreva o feedback de forma objetiva..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeFbModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFeedback()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DESENVOLVIMENTO -->
+<div class="modal-overlay" id="desenvModal">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head">
+      <h3 id="desenvModalTitle">Registrar Desenvolvimento</h3>
+      <button class="btn btn-outline btn-sm" onclick="closeDesenvModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="desenvId">
+      <div class="form-grid2">
+        <div class="full">
+          <label class="form-label2">Colaborador *</label>
+          <select class="form-select2" id="desenvColab"></select>
+        </div>
+        <div>
+          <label class="form-label2">Tipo *</label>
+          <select class="form-select2" id="desenvTipo" onchange="toggleDesenvCampos()">
+            <option value="Promoção">Promoção</option>
+            <option value="Reajuste Salarial">Reajuste Salarial</option>
+            <option value="Mudança de Cargo">Mudança de Cargo</option>
+            <option value="Reconhecimento">Reconhecimento</option>
+            <option value="Advertência">Advertência</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label2">Data *</label>
+          <input type="date" class="form-input2" id="desenvData">
+        </div>
+        <div id="desenvAnteriorWrap">
+          <label class="form-label2" id="desenvAnteriorLabel">Cargo / Salário anterior</label>
+          <input type="text" class="form-input2" id="desenvAnterior" placeholder="Ex: Analista Jr / R$ 3.000">
+        </div>
+        <div id="desenvNovoWrap">
+          <label class="form-label2" id="desenvNovoLabel">Cargo / Salário novo</label>
+          <input type="text" class="form-input2" id="desenvNovo" placeholder="Ex: Analista Pleno / R$ 4.200">
+        </div>
+        <div class="full">
+          <label class="form-label2">Observação / Descrição</label>
+          <textarea class="form-textarea2" id="desenvObs" rows="3" placeholder="Detalhes adicionais..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeDesenvModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDesenv()">Salvar</button>
     </div>
   </div>
 </div>
@@ -268,6 +529,7 @@ const sb = supabase.createClient(
 // ================================================================
 let S = { leader: null };
 let allColabs = [], allEsat = [], allCargos = [];
+let allPdi = [], allFeedbacks = [], allDesenv = [];
 
 // ================================================================
 // UTILS
@@ -352,6 +614,9 @@ function showApp() {
   loadCargos();
   loadRs();
   renderAusencias();
+  loadPdi();
+  loadFeedbacks();
+  loadDesenv();
 }
 
 // ================================================================
@@ -724,6 +989,502 @@ async function excluirAusencia(id) {
   await db.collection('ausencias_pj').doc(id).delete();
   allAusencias = allAusencias.filter(a => a.id !== id);
   renderAusenciasHistorico();
+  toast('Removido.');
+}
+
+// ================================================================
+// PDI
+// ================================================================
+function _pdiQuery(collection) {
+  const q = db.collection(collection);
+  return S.leader.isAdmin ? q : q.where('lider', '==', S.leader.name);
+}
+
+async function loadPdi() {
+  try {
+    const snap = await _pdiQuery('pdi').orderBy('data_cadastro', 'desc').get();
+    allPdi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPdi(allPdi);
+  } catch(e) {
+    document.getElementById('pdiWrap').innerHTML = '<div class="empty">Erro ao carregar PDIs.</div>';
+  }
+}
+
+function pdiProgressoPct(tarefas) {
+  if (!tarefas || !tarefas.length) return 0;
+  return Math.round(tarefas.filter(t => t.concluido).length / tarefas.length * 100);
+}
+
+function renderPdi(list) {
+  const wrap = document.getElementById('pdiWrap');
+  if (!list.length) { wrap.innerHTML = '<div class="empty">Nenhum PDI cadastrado.</div>'; return; }
+  wrap.innerHTML = list.map(p => {
+    const pct = pdiProgressoPct(p.tarefas);
+    const cor = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--navy-mid)' : 'var(--amber)';
+    const tarefasHtml = (p.tarefas || []).map((t, i) => `
+      <div class="pdi-tarefa-row">
+        <input type="checkbox" ${t.concluido ? 'checked' : ''} onchange="pdiToggleTarefa('${p.id}', ${i}, this.checked)">
+        <div class="pdi-tarefa-info">
+          <span class="${t.concluido ? 'pdi-tarefa-done' : ''}">${t.tarefa || '—'}</span>
+          ${t.descricao ? `<div style="color:var(--muted);font-size:.75rem;margin-top:2px">${t.descricao}</div>` : ''}
+          <div class="pdi-tarefa-dates">
+            ${t.data_inicio ? 'Início: ' + fmtDate(t.data_inicio) : ''}
+            ${t.data_prevista_conclusao ? ' · Prev.: ' + fmtDate(t.data_prevista_conclusao) : ''}
+            ${t.data_conclusao ? ' · Concluído: ' + fmtDate(t.data_conclusao) : ''}
+            ${t.obs ? ' · ' + t.obs : ''}
+          </div>
+        </div>
+      </div>`).join('');
+    return `<div class="pdi-card">
+      <div class="pdi-header">
+        <div>
+          <div class="pdi-objetivo">${p.objetivo || '—'}</div>
+          <div class="pdi-colab">${p.colaborador_nome || '—'}${p.supervisor ? ' · Supervisor: ' + p.supervisor : ''}${S.leader.isAdmin && p.lider ? ' · Líder: ' + p.lider : ''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-outline btn-sm" onclick="editPdi('${p.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePdi('${p.id}')">✕</button>
+        </div>
+      </div>
+      <div class="pdi-progress-wrap"><div class="pdi-progress-bar" style="width:${pct}%;background:${cor}"></div></div>
+      <div class="pdi-pct" style="color:${cor};font-weight:700">${pct}% concluído · ${(p.tarefas||[]).filter(t=>t.concluido).length}/${(p.tarefas||[]).length} tarefas</div>
+      ${tarefasHtml ? `<details class="pdi-tarefas"><summary style="cursor:pointer;font-size:.78rem;color:var(--muted);padding:6px 0">Ver tarefas</summary>${tarefasHtml}</details>` : ''}
+      <div style="font-size:.72rem;color:var(--muted);margin-top:8px">Cadastrado em: ${fmtDate(p.data_cadastro)}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterPdi() {
+  const q = document.getElementById('pdiSearch').value.toLowerCase();
+  const st = document.getElementById('pdiFiltroStatus').value;
+  renderPdi(allPdi.filter(p => {
+    if (st === 'concluido' && pdiProgressoPct(p.tarefas) < 100) return false;
+    if (st === 'em_andamento' && pdiProgressoPct(p.tarefas) >= 100) return false;
+    return !q || (p.colaborador_nome||'').toLowerCase().includes(q) || (p.objetivo||'').toLowerCase().includes(q);
+  }));
+}
+
+let _pdiTarefaCount = 0;
+
+function pdiAddTarefa(t) {
+  const i = _pdiTarefaCount++;
+  const wrap = document.getElementById('pdiTarefasWrap');
+  const div = document.createElement('div');
+  div.className = 'tarefa-add-row';
+  div.id = 'ptarefa_' + i;
+  div.innerHTML = `
+    <button type="button" class="tarefa-remove-btn" onclick="document.getElementById('ptarefa_${i}').remove()">✕</button>
+    <div class="form-grid2" style="gap:8px">
+      <div class="full"><label class="form-label2">Tarefa</label><input type="text" class="form-input2 pt-tarefa" value="${t?.tarefa||''}" placeholder="Nome da tarefa"></div>
+      <div class="full"><label class="form-label2">Descrição</label><textarea class="form-textarea2 pt-desc" rows="2" placeholder="Detalhe a tarefa...">${t?.descricao||''}</textarea></div>
+      <div><label class="form-label2">Data início</label><input type="date" class="form-input2 pt-inicio" value="${t?.data_inicio||''}"></div>
+      <div><label class="form-label2">Data prev. conclusão</label><input type="date" class="form-input2 pt-prev" value="${t?.data_prevista_conclusao||''}"></div>
+      <div><label class="form-label2">Data conclusão</label><input type="date" class="form-input2 pt-concl" value="${t?.data_conclusao||''}"></div>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:20px"><input type="checkbox" class="pt-ok" ${t?.concluido?'checked':''} style="width:16px;height:16px"><label class="form-label2" style="margin:0">Concluído</label></div>
+      <div class="full"><label class="form-label2">Observação</label><input type="text" class="form-input2 pt-obs" value="${t?.obs||''}" placeholder="Obs..."></div>
+    </div>`;
+  wrap.appendChild(div);
+}
+
+function _collectPdiTarefas() {
+  return Array.from(document.querySelectorAll('#pdiTarefasWrap .tarefa-add-row')).map(row => ({
+    tarefa: row.querySelector('.pt-tarefa').value.trim(),
+    descricao: row.querySelector('.pt-desc').value.trim(),
+    data_inicio: row.querySelector('.pt-inicio').value || null,
+    data_prevista_conclusao: row.querySelector('.pt-prev').value || null,
+    data_conclusao: row.querySelector('.pt-concl').value || null,
+    concluido: row.querySelector('.pt-ok').checked,
+    obs: row.querySelector('.pt-obs').value.trim(),
+  })).filter(t => t.tarefa);
+}
+
+function _fillPdiColabSelect(selectedNome) {
+  const sel = document.getElementById('pdiColab');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  const lista = S.leader.isAdmin ? [] : allColabs;
+  if (S.leader.isAdmin) {
+    // Admin: carrega todos os colaboradores
+    db.collection('colaboradores').orderBy('nome').get().then(snap => {
+      snap.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.data().nome;
+        opt.textContent = d.data().nome;
+        if (d.data().nome === selectedNome) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    });
+  } else {
+    lista.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.nome;
+      opt.textContent = c.nome;
+      if (c.nome === selectedNome) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+function openPdiModal() {
+  _pdiTarefaCount = 0;
+  document.getElementById('pdiId').value = '';
+  document.getElementById('pdiModalTitle').textContent = 'Novo PDI';
+  document.getElementById('pdiObjetivo').value = '';
+  document.getElementById('pdiSupervisor').value = '';
+  document.getElementById('pdiDataCadastro').value = new Date().toISOString().split('T')[0];
+  document.getElementById('pdiTarefasWrap').innerHTML = '';
+  _fillPdiColabSelect('');
+  pdiAddTarefa();
+  document.getElementById('pdiModal').classList.add('open');
+}
+
+function closePdiModal() { document.getElementById('pdiModal').classList.remove('open'); }
+
+function editPdi(id) {
+  const p = allPdi.find(x => x.id === id); if (!p) return;
+  _pdiTarefaCount = 0;
+  document.getElementById('pdiId').value = id;
+  document.getElementById('pdiModalTitle').textContent = 'Editar PDI';
+  document.getElementById('pdiObjetivo').value = p.objetivo || '';
+  document.getElementById('pdiSupervisor').value = p.supervisor || '';
+  document.getElementById('pdiDataCadastro').value = p.data_cadastro || '';
+  document.getElementById('pdiTarefasWrap').innerHTML = '';
+  _fillPdiColabSelect(p.colaborador_nome || '');
+  (p.tarefas || []).forEach(t => pdiAddTarefa(t));
+  if (!(p.tarefas||[]).length) pdiAddTarefa();
+  document.getElementById('pdiModal').classList.add('open');
+}
+
+async function savePdi() {
+  const colab = document.getElementById('pdiColab').value;
+  const obj   = document.getElementById('pdiObjetivo').value.trim();
+  if (!colab || !obj) { toast('Preencha colaborador e objetivo.', 'error'); return; }
+  const tarefas = _collectPdiTarefas();
+  const payload = {
+    colaborador_nome: colab,
+    lider: S.leader.name,
+    objetivo: obj,
+    supervisor: document.getElementById('pdiSupervisor').value.trim(),
+    data_cadastro: document.getElementById('pdiDataCadastro').value,
+    tarefas,
+    atualizado_em: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  const id = document.getElementById('pdiId').value;
+  try {
+    if (id) {
+      await db.collection('pdi').doc(id).update(payload);
+      const idx = allPdi.findIndex(x => x.id === id);
+      if (idx >= 0) allPdi[idx] = { id, ...payload };
+    } else {
+      payload.criado_em = firebase.firestore.FieldValue.serverTimestamp();
+      const ref = await db.collection('pdi').add(payload);
+      allPdi.unshift({ id: ref.id, ...payload });
+    }
+    closePdiModal();
+    renderPdi(allPdi);
+    toast('PDI salvo!');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function deletePdi(id) {
+  if (!confirm('Excluir este PDI?')) return;
+  await db.collection('pdi').doc(id).delete();
+  allPdi = allPdi.filter(x => x.id !== id);
+  renderPdi(allPdi);
+  toast('PDI removido.');
+}
+
+async function pdiToggleTarefa(pdiId, tarefaIdx, checked) {
+  const p = allPdi.find(x => x.id === pdiId); if (!p) return;
+  p.tarefas[tarefaIdx].concluido = checked;
+  if (checked) p.tarefas[tarefaIdx].data_conclusao = new Date().toISOString().split('T')[0];
+  await db.collection('pdi').doc(pdiId).update({ tarefas: p.tarefas });
+  renderPdi(allPdi);
+}
+
+// ================================================================
+// FEEDBACK
+// ================================================================
+function _fillFbColabSelect(selectedNome) {
+  const sel = document.getElementById('fbColab');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  if (S.leader.isAdmin) {
+    db.collection('colaboradores').orderBy('nome').get().then(snap => {
+      snap.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.data().nome;
+        opt.textContent = d.data().nome;
+        if (d.data().nome === selectedNome) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    });
+  } else {
+    allColabs.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.nome; opt.textContent = c.nome;
+      if (c.nome === selectedNome) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+async function loadFeedbacks() {
+  try {
+    const snap = await _pdiQuery('feedbacks').orderBy('data', 'desc').get();
+    allFeedbacks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderFeedbacks(allFeedbacks);
+  } catch(e) {
+    document.getElementById('fbWrap').innerHTML = '<div class="empty">Erro ao carregar feedbacks.</div>';
+  }
+}
+
+function renderFeedbacks(list) {
+  const wrap = document.getElementById('fbWrap');
+  if (!list.length) { wrap.innerHTML = '<div class="empty">Nenhum feedback registrado.</div>'; return; }
+  const tipoIcon = { positivo: '👍', construtivo: '🔧', desenvolvimento: '📚' };
+  wrap.innerHTML = list.map(f => `
+    <div class="fb-card ${f.tipo||''}">
+      <div class="fb-meta">
+        <span class="fb-tipo-badge fb-tipo-${f.tipo||'positivo'}">${tipoIcon[f.tipo]||''} ${(f.tipo||'').charAt(0).toUpperCase()+(f.tipo||'').slice(1)}</span>
+        <span class="fb-colab">${f.colaborador_nome||'—'}</span>
+        <span class="fb-date">${fmtDate(f.data)}</span>
+        ${S.leader.isAdmin && f.lider ? `<span style="font-size:.72rem;color:var(--muted)">· Líder: ${f.lider}</span>` : ''}
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="editFeedback('${f.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFeedback('${f.id}')">✕</button>
+        </div>
+      </div>
+      ${f.acao ? `<div class="fb-acao">📍 ${f.acao}</div>` : ''}
+      <div class="fb-desc">${(f.descricao||'').replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+}
+
+function filterFeedbacks() {
+  const q  = document.getElementById('fbSearch').value.toLowerCase();
+  const tp = document.getElementById('fbFiltroTipo').value;
+  renderFeedbacks(allFeedbacks.filter(f =>
+    (!tp || f.tipo === tp) &&
+    (!q  || (f.colaborador_nome||'').toLowerCase().includes(q))
+  ));
+}
+
+function openFeedbackModal() {
+  document.getElementById('fbId').value = '';
+  document.getElementById('fbModalTitle').textContent = 'Novo Feedback';
+  document.getElementById('fbData').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fbTipo').value = 'positivo';
+  document.getElementById('fbAcao').value = '';
+  document.getElementById('fbDescricao').value = '';
+  _fillFbColabSelect('');
+  document.getElementById('fbModal').classList.add('open');
+}
+function closeFbModal() { document.getElementById('fbModal').classList.remove('open'); }
+
+function editFeedback(id) {
+  const f = allFeedbacks.find(x => x.id === id); if (!f) return;
+  document.getElementById('fbId').value = id;
+  document.getElementById('fbModalTitle').textContent = 'Editar Feedback';
+  document.getElementById('fbData').value = f.data || '';
+  document.getElementById('fbTipo').value = f.tipo || 'positivo';
+  document.getElementById('fbAcao').value = f.acao || '';
+  document.getElementById('fbDescricao').value = f.descricao || '';
+  _fillFbColabSelect(f.colaborador_nome || '');
+  document.getElementById('fbModal').classList.add('open');
+}
+
+async function saveFeedback() {
+  const colab = document.getElementById('fbColab').value;
+  const desc  = document.getElementById('fbDescricao').value.trim();
+  const data  = document.getElementById('fbData').value;
+  if (!colab || !desc || !data) { toast('Preencha colaborador, data e feedback.', 'error'); return; }
+  const payload = {
+    colaborador_nome: colab,
+    lider: S.leader.name,
+    data,
+    tipo: document.getElementById('fbTipo').value,
+    acao: document.getElementById('fbAcao').value.trim(),
+    descricao: desc,
+    atualizado_em: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  const id = document.getElementById('fbId').value;
+  try {
+    if (id) {
+      await db.collection('feedbacks').doc(id).update(payload);
+      const idx = allFeedbacks.findIndex(x => x.id === id);
+      if (idx >= 0) allFeedbacks[idx] = { id, ...payload };
+    } else {
+      payload.criado_em = firebase.firestore.FieldValue.serverTimestamp();
+      const ref = await db.collection('feedbacks').add(payload);
+      allFeedbacks.unshift({ id: ref.id, ...payload });
+    }
+    closeFbModal();
+    renderFeedbacks(allFeedbacks);
+    toast('Feedback salvo!');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function deleteFeedback(id) {
+  if (!confirm('Excluir este feedback?')) return;
+  await db.collection('feedbacks').doc(id).delete();
+  allFeedbacks = allFeedbacks.filter(x => x.id !== id);
+  renderFeedbacks(allFeedbacks);
+  toast('Removido.');
+}
+
+// ================================================================
+// DESENVOLVIMENTO
+// ================================================================
+function _fillDesenvColabSelect(selectedNome) {
+  const sel = document.getElementById('desenvColab');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  if (S.leader.isAdmin) {
+    db.collection('colaboradores').orderBy('nome').get().then(snap => {
+      snap.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.data().nome; opt.textContent = d.data().nome;
+        if (d.data().nome === selectedNome) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    });
+  } else {
+    allColabs.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.nome; opt.textContent = c.nome;
+      if (c.nome === selectedNome) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+const _desenvIconMap = { 'Promoção': { cls: 'promocao', icon: '🏅' }, 'Reajuste Salarial': { cls: 'reajuste', icon: '💰' }, 'Mudança de Cargo': { cls: 'cargo', icon: '🔄' }, 'Reconhecimento': { cls: 'reconhecimento', icon: '⭐' }, 'Advertência': { cls: 'outro', icon: '⚠️' }, 'Outro': { cls: 'outro', icon: '📝' } };
+
+function toggleDesenvCampos() {
+  const tipo = document.getElementById('desenvTipo').value;
+  const showDelta = ['Promoção','Reajuste Salarial','Mudança de Cargo'].includes(tipo);
+  document.getElementById('desenvAnteriorWrap').style.display = showDelta ? '' : 'none';
+  document.getElementById('desenvNovoWrap').style.display     = showDelta ? '' : 'none';
+  if (tipo === 'Reajuste Salarial') {
+    document.getElementById('desenvAnteriorLabel').textContent = 'Salário anterior';
+    document.getElementById('desenvNovoLabel').textContent     = 'Salário novo';
+    document.getElementById('desenvAnterior').placeholder = 'Ex: R$ 3.000';
+    document.getElementById('desenvNovo').placeholder     = 'Ex: R$ 4.200';
+  } else {
+    document.getElementById('desenvAnteriorLabel').textContent = 'Cargo / Situação anterior';
+    document.getElementById('desenvNovoLabel').textContent     = 'Cargo / Situação nova';
+    document.getElementById('desenvAnterior').placeholder = 'Ex: Analista Jr';
+    document.getElementById('desenvNovo').placeholder     = 'Ex: Analista Pleno';
+  }
+}
+
+async function loadDesenv() {
+  try {
+    const snap = await _pdiQuery('desenvolvimento').orderBy('data', 'desc').get();
+    allDesenv = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDesenv(allDesenv);
+  } catch(e) {
+    document.getElementById('desenvWrap').innerHTML = '<div class="empty">Erro ao carregar histórico.</div>';
+  }
+}
+
+function renderDesenv(list) {
+  const wrap = document.getElementById('desenvWrap');
+  if (!list.length) { wrap.innerHTML = '<div class="empty">Nenhum registro de desenvolvimento.</div>'; return; }
+  wrap.innerHTML = list.map(d => {
+    const m = _desenvIconMap[d.tipo] || { cls: 'outro', icon: '📝' };
+    const hasDelta = d.valor_anterior || d.valor_novo;
+    return `<div class="desenv-card">
+      <div class="desenv-icon ${m.cls}">${m.icon}</div>
+      <div class="desenv-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="desenv-title">${d.tipo || '—'}</div>
+            <div class="desenv-colab">${d.colaborador_nome || '—'}${S.leader.isAdmin && d.lider ? ' · Líder: ' + d.lider : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="desenv-date">${fmtDate(d.data)}</span>
+            <button class="btn btn-outline btn-sm" onclick="editDesenv('${d.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteDesenv('${d.id}')">✕</button>
+          </div>
+        </div>
+        ${hasDelta ? `<div class="desenv-delta">${d.valor_anterior||'—'} → ${d.valor_novo||'—'}</div>` : ''}
+        ${d.descricao ? `<div class="desenv-detail">${d.descricao}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterDesenv() {
+  const q  = document.getElementById('desenvSearch').value.toLowerCase();
+  const tp = document.getElementById('desenvFiltroTipo').value;
+  renderDesenv(allDesenv.filter(d =>
+    (!tp || d.tipo === tp) &&
+    (!q  || (d.colaborador_nome||'').toLowerCase().includes(q))
+  ));
+}
+
+function openDesenvModal() {
+  document.getElementById('desenvId').value = '';
+  document.getElementById('desenvModalTitle').textContent = 'Registrar Desenvolvimento';
+  document.getElementById('desenvTipo').value = 'Promoção';
+  document.getElementById('desenvData').value = new Date().toISOString().split('T')[0];
+  document.getElementById('desenvAnterior').value = '';
+  document.getElementById('desenvNovo').value = '';
+  document.getElementById('desenvObs').value = '';
+  _fillDesenvColabSelect('');
+  toggleDesenvCampos();
+  document.getElementById('desenvModal').classList.add('open');
+}
+function closeDesenvModal() { document.getElementById('desenvModal').classList.remove('open'); }
+
+function editDesenv(id) {
+  const d = allDesenv.find(x => x.id === id); if (!d) return;
+  document.getElementById('desenvId').value = id;
+  document.getElementById('desenvModalTitle').textContent = 'Editar Registro';
+  document.getElementById('desenvTipo').value = d.tipo || 'Outro';
+  document.getElementById('desenvData').value = d.data || '';
+  document.getElementById('desenvAnterior').value = d.valor_anterior || '';
+  document.getElementById('desenvNovo').value = d.valor_novo || '';
+  document.getElementById('desenvObs').value = d.descricao || '';
+  _fillDesenvColabSelect(d.colaborador_nome || '');
+  toggleDesenvCampos();
+  document.getElementById('desenvModal').classList.add('open');
+}
+
+async function saveDesenv() {
+  const colab = document.getElementById('desenvColab').value;
+  const data  = document.getElementById('desenvData').value;
+  if (!colab || !data) { toast('Preencha colaborador e data.', 'error'); return; }
+  const payload = {
+    colaborador_nome: colab,
+    lider: S.leader.name,
+    tipo: document.getElementById('desenvTipo').value,
+    data,
+    valor_anterior: document.getElementById('desenvAnterior').value.trim(),
+    valor_novo: document.getElementById('desenvNovo').value.trim(),
+    descricao: document.getElementById('desenvObs').value.trim(),
+    atualizado_em: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  const id = document.getElementById('desenvId').value;
+  try {
+    if (id) {
+      await db.collection('desenvolvimento').doc(id).update(payload);
+      const idx = allDesenv.findIndex(x => x.id === id);
+      if (idx >= 0) allDesenv[idx] = { id, ...payload };
+    } else {
+      payload.criado_em = firebase.firestore.FieldValue.serverTimestamp();
+      const ref = await db.collection('desenvolvimento').add(payload);
+      allDesenv.unshift({ id: ref.id, ...payload });
+    }
+    closeDesenvModal();
+    renderDesenv(allDesenv);
+    toast('Registro salvo!');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function deleteDesenv(id) {
+  if (!confirm('Excluir este registro?')) return;
+  await db.collection('desenvolvimento').doc(id).delete();
+  allDesenv = allDesenv.filter(x => x.id !== id);
+  renderDesenv(allDesenv);
   toast('Removido.');
 }
 </script>
