@@ -946,10 +946,15 @@ function renderKanbanRs(cands) {
 }
 
 async function abrirCandidatoRs(id) {
-  const { data: c } = await sb.from('candidaturas')
-    .select('id, nome, etapa, email, telefone, linkedin_url, cv_url, disc_perfil, analises_cv(*), avaliacoes(*)')
+  // Busca candidato + análise
+  const { data: c, error: cErr } = await sb.from('candidaturas')
+    .select('id, nome, etapa, email, telefone, linkedin_url, cv_url, disc_perfil, analises_cv(*)')
     .eq('id', id).single();
-  if (!c) return;
+  if (cErr) { toast('Erro: ' + cErr.message, 'error'); console.error('[abrirCandidatoRs]', cErr); return; }
+  if (!c) { toast('Candidato não encontrado', 'error'); return; }
+
+  // Busca avaliações separado (evita erro de FK)
+  const { data: avalData } = await sb.from('avaliacoes').select('*').eq('candidatura_id', id);
 
   const etapaAtual = RS_ETAPAS.find(e => e.k === c.etapa) || RS_ETAPAS[0];
   const proximas = RS_ETAPAS.filter(e => e.k !== c.etapa && e.k !== 'reprovado');
@@ -959,7 +964,7 @@ async function abrirCandidatoRs(id) {
   const posArr = Array.isArray(an.pontos_positivos) ? an.pontos_positivos : [];
   const altArr = Array.isArray(an.alertas) ? an.alertas : [];
   const prgArr = Array.isArray(an.perguntas_entrevista) ? an.perguntas_entrevista : [];
-  const avals = c.avaliacoes || [];
+  const avals = avalData || [];
   const avalRH = avals.find(a => a.tipo === 'entrevista_rh');
   const avalTP = avals.find(a => a.tipo === 'teste_pratico');
   const avalGT = avals.find(a => a.tipo === 'gestor');
