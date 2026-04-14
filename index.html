@@ -180,6 +180,16 @@
   .desenv-date { font-size: .75rem; color: var(--muted); }
   .desenv-detail { font-size: .82rem; color: var(--text); margin-top: 4px; }
   .desenv-delta { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; background: #f1f5f9; border-radius: 6px; padding: 2px 8px; margin-top: 4px; }
+
+  /* ── COLAB DETALHE MODAL ── */
+  .colab-tabs { border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; gap: 2px; background: var(--white); flex-shrink: 0; }
+  .colab-tab-btn { padding: 10px 14px; border: none; background: none; font-family: inherit; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all .15s; }
+  .colab-tab-btn:hover { color: var(--navy); }
+  .colab-tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .colab-tab-content { display: none; }
+  .colab-tab-content.active { display: block; }
+  tr.clickable { cursor: pointer; }
+  tr.clickable:hover td { background: #f0f7ff; }
 </style>
 </head>
 <body>
@@ -222,9 +232,6 @@
     <button class="tab-btn" onclick="showTab('cargos',this)">📋 Cargos</button>
     <button class="tab-btn" onclick="showTab('rs',this)">🔍 R&amp;S</button>
     <button class="tab-btn" onclick="showTab('ausencias',this)">🗓️ Gestão de Ausências</button>
-    <button class="tab-btn" onclick="showTab('pdi',this)">📈 PDI</button>
-    <button class="tab-btn" onclick="showTab('feedback',this)">💬 Feedback</button>
-    <button class="tab-btn" onclick="showTab('desenvolvimento',this)">🚀 Desenvolvimento</button>
     <button class="tab-btn" onclick="showTab('qrsday',this)">🗳️ QRS-Day</button>
   </div>
 
@@ -282,68 +289,6 @@
     <div id="ausenciasContent"></div>
   </div>
 
-  <!-- PDI -->
-  <div class="tab-content" id="tab-pdi">
-    <div class="card">
-      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>📈 Planos de Desenvolvimento Individual</span>
-        <button class="btn btn-primary btn-sm" onclick="openPdiModal()">+ Novo PDI</button>
-      </div>
-      <div class="search-bar">
-        <input class="search-input" id="pdiSearch" placeholder="Buscar por colaborador ou objetivo..." oninput="filterPdi()">
-        <select class="search-input" style="flex:0 0 180px" id="pdiFiltroStatus" onchange="filterPdi()">
-          <option value="">Todos os status</option>
-          <option value="em_andamento">Em andamento</option>
-          <option value="concluido">Concluídos</option>
-        </select>
-      </div>
-      <div id="pdiWrap"><div class="loading">Carregando...</div></div>
-    </div>
-  </div>
-
-  <!-- FEEDBACK -->
-  <div class="tab-content" id="tab-feedback">
-    <div class="card">
-      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>💬 Registro de Feedbacks</span>
-        <button class="btn btn-primary btn-sm" onclick="openFeedbackModal()">+ Novo Feedback</button>
-      </div>
-      <div class="search-bar">
-        <input class="search-input" id="fbSearch" placeholder="Buscar por colaborador..." oninput="filterFeedbacks()">
-        <select class="search-input" style="flex:0 0 180px" id="fbFiltroTipo" onchange="filterFeedbacks()">
-          <option value="">Todos os tipos</option>
-          <option value="positivo">Positivo</option>
-          <option value="construtivo">Construtivo</option>
-          <option value="desenvolvimento">Desenvolvimento</option>
-        </select>
-      </div>
-      <div id="fbWrap"><div class="loading">Carregando...</div></div>
-    </div>
-  </div>
-
-  <!-- DESENVOLVIMENTO -->
-  <div class="tab-content" id="tab-desenvolvimento">
-    <div class="card">
-      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>🚀 Histórico de Desenvolvimento</span>
-        <button class="btn btn-primary btn-sm" onclick="openDesenvModal()">+ Registrar</button>
-      </div>
-      <div class="search-bar">
-        <input class="search-input" id="desenvSearch" placeholder="Buscar por colaborador..." oninput="filterDesenv()">
-        <select class="search-input" style="flex:0 0 200px" id="desenvFiltroTipo" onchange="filterDesenv()">
-          <option value="">Todos os tipos</option>
-          <option value="Promoção">Promoção</option>
-          <option value="Reajuste Salarial">Reajuste Salarial</option>
-          <option value="Mudança de Cargo">Mudança de Cargo</option>
-          <option value="Reconhecimento">Reconhecimento</option>
-          <option value="Advertência">Advertência</option>
-          <option value="Outro">Outro</option>
-        </select>
-      </div>
-      <div id="desenvWrap"><div class="loading">Carregando...</div></div>
-    </div>
-  </div>
-
   <!-- QRS-DAY -->
   <div class="tab-content" id="tab-qrsday">
     <div class="card">
@@ -352,6 +297,44 @@
       <a href="https://daniellefelipe-ui.github.io/problemasQRSday/" target="_blank" class="section-link" style="display:inline-flex">
         <span class="icon">🗳️</span> Abrir painel QRS-Day
       </a>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PERFIL COLABORADOR -->
+<div class="modal-overlay" id="colabDetalheModal">
+  <div class="modal-box" style="max-width:780px">
+    <div class="modal-head">
+      <div>
+        <h3 id="colabDetalheName" style="font-size:1rem"></h3>
+        <div id="colabDetalheMeta" style="font-size:.78rem;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeColabDetalhe()">✕</button>
+    </div>
+    <div class="colab-tabs">
+      <button class="colab-tab-btn active" onclick="showColabTab('pdi',this)">📈 PDI</button>
+      <button class="colab-tab-btn" onclick="showColabTab('feedback',this)">💬 Feedback</button>
+      <button class="colab-tab-btn" onclick="showColabTab('desenvolvimento',this)">🚀 Desenvolvimento</button>
+    </div>
+    <div class="modal-body">
+      <div id="colabTab-pdi" class="colab-tab-content active">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="btn btn-primary btn-sm" onclick="openPdiModalFor()">+ Novo PDI</button>
+        </div>
+        <div id="colabPdiWrap"><div class="loading">Carregando...</div></div>
+      </div>
+      <div id="colabTab-feedback" class="colab-tab-content">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="btn btn-primary btn-sm" onclick="openFeedbackModalFor()">+ Novo Feedback</button>
+        </div>
+        <div id="colabFbWrap"><div class="loading">Carregando...</div></div>
+      </div>
+      <div id="colabTab-desenvolvimento" class="colab-tab-content">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+          <button class="btn btn-primary btn-sm" onclick="openDesenvModalFor()">+ Registrar</button>
+        </div>
+        <div id="colabDesenvWrap"><div class="loading">Carregando...</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -617,9 +600,6 @@ function showApp() {
     loadCargos();
     loadRs();
     renderAusencias();
-    loadPdi();
-    loadFeedbacks();
-    loadDesenv();
   });
 }
 
@@ -672,7 +652,7 @@ function renderTimeTable(list) {
   list = [...list].sort((a,b) => (a.nome||'').localeCompare(b.nome||'', 'pt-BR'));
   wrap.innerHTML = `<div class="table-wrap"><table>
     <thead><tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>Contrato</th><th>Status</th><th>Admissão</th></tr></thead>
-    <tbody>${list.map(c => `<tr>
+    <tbody>${list.map(c => `<tr class="clickable" onclick='openColabDetalhe(${JSON.stringify(c)})'>
       <td><strong>${c.nome}</strong>${c.email ? '<br><small style="color:var(--muted)">' + c.email + '</small>' : ''}</td>
       <td>${c.cargo || '—'}</td>
       <td>${c.setor || '—'}</td>
@@ -1006,6 +986,209 @@ async function excluirAusencia(id) {
 }
 
 // ================================================================
+// PERFIL COLABORADOR — modal com PDI, Feedback, Desenvolvimento
+// ================================================================
+let _colabAtual = null;
+
+function openColabDetalhe(c) {
+  _colabAtual = c;
+  document.getElementById('colabDetalheName').textContent = c.nome || '—';
+  document.getElementById('colabDetalheMeta').textContent =
+    [c.cargo, c.setor, c.tipo_contrato].filter(Boolean).join(' · ');
+  // Reset para aba PDI
+  document.querySelectorAll('.colab-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.colab-tab-content').forEach(b => b.classList.remove('active'));
+  document.querySelector('.colab-tab-btn').classList.add('active');
+  document.getElementById('colabTab-pdi').classList.add('active');
+  document.getElementById('colabDetalheModal').classList.add('open');
+  _loadColabPdi();
+}
+
+function closeColabDetalhe() {
+  document.getElementById('colabDetalheModal').classList.remove('open');
+  _colabAtual = null;
+}
+
+function showColabTab(tab, btn) {
+  document.querySelectorAll('.colab-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.colab-tab-content').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('colabTab-' + tab).classList.add('active');
+  if (tab === 'pdi') _loadColabPdi();
+  else if (tab === 'feedback') _loadColabFeedbacks();
+  else if (tab === 'desenvolvimento') _loadColabDesenv();
+}
+
+async function _loadColabPdi() {
+  const wrap = document.getElementById('colabPdiWrap');
+  wrap.innerHTML = '<div class="loading">Carregando...</div>';
+  try {
+    const snap = await db.collection('pdi').where('colaborador_nome', '==', _colabAtual.nome).get();
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    lista.sort((a,b) => (b.data_cadastro||'').localeCompare(a.data_cadastro||''));
+    if (!lista.length) { wrap.innerHTML = '<div class="empty">Nenhum PDI cadastrado.</div>'; return; }
+    wrap.innerHTML = lista.map(p => {
+      const pct = pdiProgressoPct(p.tarefas);
+      const cor = pct >= 100 ? 'var(--green)' : pct >= 50 ? 'var(--navy-mid)' : 'var(--amber)';
+      const tarefasHtml = (p.tarefas || []).map((t, i) => `
+        <div class="pdi-tarefa-row">
+          <input type="checkbox" ${t.concluido ? 'checked' : ''} onchange="pdiToggleTarefa('${p.id}', ${i}, this.checked, true)">
+          <div class="pdi-tarefa-info">
+            <span class="${t.concluido ? 'pdi-tarefa-done' : ''}">${t.tarefa || '—'}</span>
+            ${t.descricao ? `<div style="color:var(--muted);font-size:.75rem;margin-top:2px">${t.descricao}</div>` : ''}
+            <div class="pdi-tarefa-dates">
+              ${t.data_inicio ? 'Início: ' + fmtDate(t.data_inicio) : ''}
+              ${t.data_prevista_conclusao ? ' · Prev.: ' + fmtDate(t.data_prevista_conclusao) : ''}
+              ${t.obs ? ' · ' + t.obs : ''}
+            </div>
+          </div>
+        </div>`).join('');
+      return `<div class="pdi-card">
+        <div class="pdi-header">
+          <div><div class="pdi-objetivo">${p.objetivo || '—'}</div>
+          ${p.supervisor ? `<div class="pdi-colab">Supervisor: ${p.supervisor}</div>` : ''}</div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-outline btn-sm" onclick="editPdiInline('${p.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePdiInline('${p.id}')">✕</button>
+          </div>
+        </div>
+        <div class="pdi-progress-wrap"><div class="pdi-progress-bar" style="width:${pct}%;background:${cor}"></div></div>
+        <div class="pdi-pct" style="color:${cor};font-weight:700">${pct}% · ${(p.tarefas||[]).filter(t=>t.concluido).length}/${(p.tarefas||[]).length} tarefas</div>
+        ${tarefasHtml ? `<details class="pdi-tarefas"><summary style="cursor:pointer;font-size:.78rem;color:var(--muted);padding:6px 0">Ver tarefas</summary>${tarefasHtml}</details>` : ''}
+        <div style="font-size:.72rem;color:var(--muted);margin-top:6px">Cadastrado em: ${fmtDate(p.data_cadastro)}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { wrap.innerHTML = `<div class="empty">Erro: ${e.message}</div>`; }
+}
+
+async function _loadColabFeedbacks() {
+  const wrap = document.getElementById('colabFbWrap');
+  wrap.innerHTML = '<div class="loading">Carregando...</div>';
+  try {
+    const snap = await db.collection('feedbacks').where('colaborador_nome', '==', _colabAtual.nome).get();
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    lista.sort((a,b) => (b.data||'').localeCompare(a.data||''));
+    if (!lista.length) { wrap.innerHTML = '<div class="empty">Nenhum feedback registrado.</div>'; return; }
+    const tipoIcon = { positivo: '👍', construtivo: '🔧', desenvolvimento: '📚' };
+    wrap.innerHTML = lista.map(f => `
+      <div class="fb-card ${f.tipo||''}">
+        <div class="fb-meta">
+          <span class="fb-tipo-badge fb-tipo-${f.tipo||'positivo'}">${tipoIcon[f.tipo]||''} ${(f.tipo||'').charAt(0).toUpperCase()+(f.tipo||'').slice(1)}</span>
+          <span class="fb-date">${fmtDate(f.data)}</span>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="editFbInline('${f.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteFbInline('${f.id}')">✕</button>
+          </div>
+        </div>
+        ${f.acao ? `<div class="fb-acao">📍 ${f.acao}</div>` : ''}
+        <div class="fb-desc">${(f.descricao||'').replace(/\n/g,'<br>')}</div>
+      </div>`).join('');
+  } catch(e) { wrap.innerHTML = `<div class="empty">Erro: ${e.message}</div>`; }
+}
+
+async function _loadColabDesenv() {
+  const wrap = document.getElementById('colabDesenvWrap');
+  wrap.innerHTML = '<div class="loading">Carregando...</div>';
+  try {
+    const snap = await db.collection('desenvolvimento').where('colaborador_nome', '==', _colabAtual.nome).get();
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    lista.sort((a,b) => (b.data||'').localeCompare(a.data||''));
+    if (!lista.length) { wrap.innerHTML = '<div class="empty">Nenhum registro de desenvolvimento.</div>'; return; }
+    wrap.innerHTML = lista.map(d => {
+      const m = _desenvIconMap[d.tipo] || { cls: 'outro', icon: '📝' };
+      const hasDelta = d.valor_anterior || d.valor_novo;
+      return `<div class="desenv-card">
+        <div class="desenv-icon ${m.cls}">${m.icon}</div>
+        <div class="desenv-body">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div><div class="desenv-title">${d.tipo || '—'}</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="desenv-date">${fmtDate(d.data)}</span>
+              <button class="btn btn-outline btn-sm" onclick="editDesenvInline('${d.id}')">✏️</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteDesenvInline('${d.id}')">✕</button>
+            </div>
+          </div>
+          ${hasDelta ? `<div class="desenv-delta">${d.valor_anterior||'—'} → ${d.valor_novo||'—'}</div>` : ''}
+          ${d.descricao ? `<div class="desenv-detail">${d.descricao}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { wrap.innerHTML = `<div class="empty">Erro: ${e.message}</div>`; }
+}
+
+// Abre modais de form já com o colaborador pré-selecionado
+function openPdiModalFor() {
+  openPdiModal();
+  setTimeout(() => {
+    const sel = document.getElementById('pdiColab');
+    if (_colabAtual) { sel.innerHTML = `<option value="${_colabAtual.nome}">${_colabAtual.nome}</option>`; }
+    // Callback pós-save: recarrega lista no perfil
+    _pdiSaveCallback = () => _loadColabPdi();
+  }, 100);
+}
+function openFeedbackModalFor() {
+  openFeedbackModal();
+  setTimeout(() => {
+    const sel = document.getElementById('fbColab');
+    if (_colabAtual) { sel.innerHTML = `<option value="${_colabAtual.nome}">${_colabAtual.nome}</option>`; }
+    _fbSaveCallback = () => _loadColabFeedbacks();
+  }, 100);
+}
+function openDesenvModalFor() {
+  openDesenvModal();
+  setTimeout(() => {
+    const sel = document.getElementById('desenvColab');
+    if (_colabAtual) { sel.innerHTML = `<option value="${_colabAtual.nome}">${_colabAtual.nome}</option>`; }
+    _desenvSaveCallback = () => _loadColabDesenv();
+  }, 100);
+}
+
+// Editar/excluir direto do perfil
+function editPdiInline(id) {
+  db.collection('pdi').doc(id).get().then(d => {
+    if (!d.exists) return;
+    const p = { id: d.id, ...d.data() };
+    allPdi = [p]; // temporário para editPdi funcionar
+    editPdi(id);
+    _pdiSaveCallback = () => _loadColabPdi();
+  });
+}
+async function deletePdiInline(id) {
+  if (!confirm('Excluir este PDI?')) return;
+  await db.collection('pdi').doc(id).delete();
+  _loadColabPdi();
+  toast('PDI removido.');
+}
+function editFbInline(id) {
+  db.collection('feedbacks').doc(id).get().then(d => {
+    if (!d.exists) return;
+    allFeedbacks = [{ id: d.id, ...d.data() }];
+    editFeedback(id);
+    _fbSaveCallback = () => _loadColabFeedbacks();
+  });
+}
+async function deleteFbInline(id) {
+  if (!confirm('Excluir este feedback?')) return;
+  await db.collection('feedbacks').doc(id).delete();
+  _loadColabFeedbacks();
+  toast('Removido.');
+}
+function editDesenvInline(id) {
+  db.collection('desenvolvimento').doc(id).get().then(d => {
+    if (!d.exists) return;
+    allDesenv = [{ id: d.id, ...d.data() }];
+    editDesenv(id);
+    _desenvSaveCallback = () => _loadColabDesenv();
+  });
+}
+async function deleteDesenvInline(id) {
+  if (!confirm('Excluir este registro?')) return;
+  await db.collection('desenvolvimento').doc(id).delete();
+  _loadColabDesenv();
+  toast('Removido.');
+}
+
+// ================================================================
 // PDI
 // ================================================================
 // Filtra localmente para evitar dependência de índices compostos no Firestore
@@ -1082,6 +1265,7 @@ function filterPdi() {
 }
 
 let _pdiTarefaCount = 0;
+let _pdiSaveCallback = null, _fbSaveCallback = null, _desenvSaveCallback = null;
 
 function pdiAddTarefa(t) {
   const i = _pdiTarefaCount++;
@@ -1197,7 +1381,7 @@ async function savePdi() {
       allPdi.unshift({ id: ref.id, ...payload });
     }
     closePdiModal();
-    renderPdi(allPdi);
+    if (_pdiSaveCallback) { _pdiSaveCallback(); _pdiSaveCallback = null; }
     toast('PDI salvo!');
   } catch(e) { toast('Erro: ' + e.message, 'error'); }
 }
@@ -1336,7 +1520,7 @@ async function saveFeedback() {
       allFeedbacks.unshift({ id: ref.id, ...payload });
     }
     closeFbModal();
-    renderFeedbacks(allFeedbacks);
+    if (_fbSaveCallback) { _fbSaveCallback(); _fbSaveCallback = null; }
     toast('Feedback salvo!');
   } catch(e) { toast('Erro: ' + e.message, 'error'); }
 }
@@ -1496,7 +1680,7 @@ async function saveDesenv() {
       allDesenv.unshift({ id: ref.id, ...payload });
     }
     closeDesenvModal();
-    renderDesenv(allDesenv);
+    if (_desenvSaveCallback) { _desenvSaveCallback(); _desenvSaveCallback = null; }
     toast('Registro salvo!');
   } catch(e) { toast('Erro: ' + e.message, 'error'); }
 }
