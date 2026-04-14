@@ -1015,23 +1015,7 @@ async function abrirCandidatoRs(id) {
     ${c.teste_ecg ? `
     <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
       <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:8px">🫀 Teste Prático ECG</div>
-      ${(()=>{
-        const ecg = c.teste_ecg;
-        const pct = ecg.total_pct ?? 0;
-        const aprovado = ecg.aprovado ?? pct >= 75;
-        const cor = aprovado ? 'var(--green)' : 'var(--red)';
-        const alertas = (ecg.questoes||[]).filter(q=>q.alerta);
-        return `<div style="background:${aprovado?'#f0fdf4':'#fef2f2'};border:1px solid ${aprovado?'#bbf7d0':'#fecaca'};border-radius:8px;padding:12px 16px;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="font-size:1.4rem;font-weight:800;color:${cor}">${pct}%</span>
-            <span style="font-size:.875rem;font-weight:600;color:${cor}">${aprovado?'✅ Aprovado':'❌ Reprovado'}</span>
-            ${alertas.length ? `<span style="font-size:.75rem;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:2px 8px">⚠️ ${alertas.length} alerta${alertas.length>1?'s':''}</span>` : ''}
-            ${ecg.editado_marco ? `<span style="font-size:.72rem;background:#ede9fe;color:#6d28d9;border-radius:20px;padding:2px 8px">✏️ Revisado</span>` : ''}
-          </div>
-          ${alertas.length ? `<div style="margin-top:8px">${alertas.map(a=>`<div style="font-size:.78rem;color:#c2410c;margin-bottom:3px">Q${a.q}: ${a.alerta}</div>`).join('')}</div>` : ''}
-          ${ecg.comentario ? `<div style="margin-top:8px;font-size:.82rem;color:var(--muted);font-style:italic">"${ecg.comentario}"</div>` : ''}
-        </div>`;
-      })()}
+      <div id="ecg-resultado-${c.id}">${renderEcgResultadoPortal(c.teste_ecg, c.id)}</div>
     </div>` : ''}
 
     <!-- Avaliações -->
@@ -1059,6 +1043,12 @@ async function abrirCandidatoRs(id) {
     </div>`;
 
   document.getElementById('colabDetalheModal').dataset.candidatoId = c.id;
+
+  // Inicializa estado de edição ECG para Dr. Marco
+  if (c.teste_ecg?.questoes?.length) {
+    window._ecgEdicao = window._ecgEdicao || {};
+    window._ecgEdicao[c.id] = { questoes: JSON.parse(JSON.stringify(c.teste_ecg.questoes)), modificado: false };
+  }
 }
 
 async function moverEtapaRs(candidatoId, novaEtapa, novaEtapaLabel) {
@@ -1936,6 +1926,120 @@ async function deleteDesenv(id) {
   allDesenv = allDesenv.filter(x => x.id !== id);
   renderDesenv(allDesenv);
   toast('Removido.');
+}
+
+// ================================================================
+// ECG — edição pelo Dr. Marco no portal
+// ================================================================
+function renderEcgResultadoPortal(testeEcg, candidaturaId) {
+  const pct = testeEcg.total_pct ?? 0;
+  const aprovado = testeEcg.aprovado ?? pct >= 75;
+  const cor = aprovado ? '#16a34a' : '#dc2626';
+  const comentario = testeEcg.comentario || '';
+  const questoes = testeEcg.questoes || [];
+  const alertas = questoes.filter(q => q.alerta);
+  const editadoMarco = testeEcg.editado_marco;
+  const questoesHtml = !questoes.length
+    ? `<div style="font-size:.8rem;color:var(--muted);margin-bottom:12px;padding:10px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px">ℹ️ Execute a correção novamente no painel RH para ver o detalhe por questão.</div>`
+    : `<div style="max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:12px" id="ecg-questoes-${candidaturaId}">
+        ${questoes.map((q, qi) => ecgRenderQuestaoItemPortal(q, qi, candidaturaId)).join('')}
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="ecgSalvarEdicaoMarcoPortal('${candidaturaId}',event)" style="margin-bottom:12px">
+        💾 Salvar edições
+      </button>`;
+  return `
+    <div style="background:${aprovado?'#f0fdf4':'#fef2f2'};border:1px solid ${aprovado?'#bbf7d0':'#fecaca'};border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span id="ecg-score-live-${candidaturaId}" style="font-size:1.4rem;font-weight:800;color:${cor}">${pct}%</span>
+        <span style="font-size:.875rem;font-weight:600;color:${cor}">${aprovado?'✅ Aprovado':'❌ Reprovado'}</span>
+        ${alertas.length ? `<span style="font-size:.75rem;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:20px;padding:2px 8px">⚠️ ${alertas.length} alerta${alertas.length>1?'s':''}</span>` : ''}
+        ${editadoMarco ? `<span style="font-size:.72rem;background:#ede9fe;color:#6d28d9;border-radius:20px;padding:2px 8px">✏️ Editado</span>` : ''}
+      </div>
+    </div>
+    ${questoesHtml}
+    <div style="margin-bottom:10px">
+      <label style="font-size:.78rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px">Comentário</label>
+      <textarea id="ecg-comentario-${candidaturaId}" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:.84rem;font-family:inherit;resize:vertical" placeholder="Observação sobre o desempenho...">${comentario}</textarea>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="ecgSalvarComentarioPortal('${candidaturaId}')">Salvar comentário</button>`;
+}
+
+function ecgRenderQuestaoItemPortal(q, qi, cid) {
+  const bg = q.nota_pct >= 100 ? '#f0fdf4' : q.nota_pct > 0 ? '#fefce8' : q.alerta ? '#fef2f2' : '#f9fafb';
+  const borda = q.alerta ? '2px solid #fca5a5' : '1px solid var(--border)';
+  const gab = q.gabarito || [];
+  const compHtml = gab.map((comp, ci) => {
+    const p = q.presentes ? q.presentes[ci] : null;
+    const cbg = p===true?'#dcfce7':p===false?'#fee2e2':'#f1f5f9';
+    const ccol = p===true?'#15803d':p===false?'#9f1239':'#64748b';
+    const cborder = p===true?'#86efac':p===false?'#fca5a5':'#cbd5e1';
+    const icon = p===true?'✓':p===false?'✗':'·';
+    return `<button onclick="ecgToggleCompPortal('${cid}',${qi},${ci})" style="background:${cbg};color:${ccol};border:1px solid ${cborder};border-radius:4px;padding:2px 8px;font-size:10px;margin:1px 2px 2px 0;cursor:pointer;font-weight:600;font-family:inherit">${icon} ${comp}</button>`;
+  }).join('');
+  const alertaVal = (q.alerta||'').replace(/"/g,'&quot;');
+  const notaCor = q.nota_pct>=100?'#16a34a':q.nota_pct>0?'#d97706':'#dc2626';
+  return `<div id="ecg-q-${cid}-${qi}" style="background:${bg};border:${borda};border-radius:8px;padding:10px 12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+      <strong style="font-size:.8rem">Q${q.q}${q.bonus?' ⭐':''}</strong>
+      <span id="ecg-nota-${cid}-${qi}" style="font-weight:700;font-size:.8rem;color:${notaCor}">${q.nota_pct}%</span>
+    </div>
+    <div style="margin-bottom:6px;line-height:2">${compHtml}</div>
+    <div style="font-size:.78rem;color:var(--text);background:rgba(0,0,0,.04);border-radius:5px;padding:5px 8px;margin-bottom:6px"><em>"${q.resposta}"</em></div>
+    ${q.nota_pct < 100 || q.alerta ? `<input type="text" value="${alertaVal}" placeholder="Alerta (opcional)"
+      oninput="ecgEditarAlertaPortal('${cid}',${qi},this.value)"
+      style="width:100%;padding:4px 8px;border:1px solid ${q.alerta?'#fca5a5':'var(--border)'};border-radius:5px;font-size:.75rem;font-family:inherit;color:${q.alerta?'#c2410c':'var(--text)'}">` : ''}
+  </div>`;
+}
+
+function ecgToggleCompPortal(cid, qi, ci) {
+  const ed = (window._ecgEdicao||{})[cid]; if (!ed) return;
+  const q = ed.questoes[qi]; if (!q) return;
+  if (!q.presentes) q.presentes = (q.gabarito||[]).map(()=>false);
+  q.presentes[ci] = !q.presentes[ci];
+  if (!q.bonus && q.gabarito?.length) q.nota_pct = Math.round((q.presentes.filter(Boolean).length/q.gabarito.length)*100);
+  ed.modificado = true;
+  const card = document.getElementById(`ecg-q-${cid}-${qi}`);
+  if (card) card.outerHTML = ecgRenderQuestaoItemPortal(q, qi, cid);
+  ecgAtualizarScoreTotalPortal(cid);
+}
+
+function ecgEditarAlertaPortal(cid, qi, valor) {
+  const ed = (window._ecgEdicao||{})[cid]; if (!ed) return;
+  ed.questoes[qi].alerta = valor.trim()||null; ed.modificado = true;
+}
+
+function ecgAtualizarScoreTotalPortal(cid) {
+  const ed = (window._ecgEdicao||{})[cid]; if (!ed||!ed.questoes.length) return;
+  const pct = Math.round(ed.questoes.reduce((s,q)=>s+(q.nota_pct||0),0)/ed.questoes.length);
+  const el = document.getElementById(`ecg-score-live-${cid}`);
+  if (el) { el.textContent=pct+'%'; el.style.color=pct>=75?'#16a34a':'#dc2626'; }
+}
+
+async function ecgSalvarEdicaoMarcoPortal(cid, evt) {
+  const ed = (window._ecgEdicao||{})[cid]; if (!ed) return;
+  const btn = evt?.target;
+  if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
+  const { data: c } = await sb.from('candidaturas').select('teste_ecg').eq('id', cid).single();
+  if (!c?.teste_ecg) { toast('Erro: dados não encontrados'); if (btn){btn.disabled=false;btn.textContent='💾 Salvar edições';} return; }
+  const soma = ed.questoes.reduce((s,q)=>s+(q.nota_pct||0),0);
+  const totalPct = Math.round(soma/ed.questoes.length);
+  const atualizado = { ...c.teste_ecg, questoes: ed.questoes, notas: ed.questoes.map(q=>q.nota_pct/100), total_pct: totalPct, aprovado: totalPct>=75, alertas_count: ed.questoes.filter(q=>q.alerta).length, editado_marco: true, editado_em: new Date().toISOString() };
+  const { error } = await sb.from('candidaturas').update({ teste_ecg: atualizado }).eq('id', cid);
+  if (error) { toast('Erro ao salvar: '+error.message); if (btn){btn.disabled=false;btn.textContent='💾 Salvar edições';} return; }
+  toast('Edições salvas! ✅');
+  ed.modificado=false;
+  const scoreEl = document.getElementById(`ecg-score-live-${cid}`);
+  if (scoreEl) { scoreEl.textContent=totalPct+'%'; scoreEl.style.color=totalPct>=75?'#16a34a':'#dc2626'; }
+  if (btn) { btn.textContent='✅ Salvo'; btn.style.background='#16a34a'; setTimeout(()=>{if(btn){btn.disabled=false;btn.textContent='💾 Salvar edições';btn.style.background='';}},2500); }
+}
+
+async function ecgSalvarComentarioPortal(candidaturaId) {
+  const textarea = document.getElementById(`ecg-comentario-${candidaturaId}`); if (!textarea) return;
+  const { data: c } = await sb.from('candidaturas').select('teste_ecg').eq('id', candidaturaId).single();
+  if (!c?.teste_ecg) return;
+  const { error } = await sb.from('candidaturas').update({ teste_ecg: {...c.teste_ecg, comentario: textarea.value} }).eq('id', candidaturaId);
+  if (error) { toast('Erro ao salvar'); return; }
+  toast('Comentário salvo!');
 }
 </script>
 </body>
