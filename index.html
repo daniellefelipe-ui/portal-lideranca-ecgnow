@@ -669,6 +669,7 @@ function renderTimeKpis() {
 function renderTimeTable(list) {
   const wrap = document.getElementById('timeWrap');
   if (!list.length) { wrap.innerHTML = '<div class="empty">Nenhum colaborador encontrado com seu nome como líder.<br><small>Certifique-se de que o campo "Líder" está preenchido no Dashboard RH.</small></div>'; return; }
+  list = [...list].sort((a,b) => (a.nome||'').localeCompare(b.nome||'', 'pt-BR'));
   wrap.innerHTML = `<div class="table-wrap"><table>
     <thead><tr><th>Nome</th><th>Cargo</th><th>Setor</th><th>Contrato</th><th>Status</th><th>Admissão</th></tr></thead>
     <tbody>${list.map(c => `<tr>
