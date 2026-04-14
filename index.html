@@ -875,7 +875,8 @@ async function loadRs() {
     }
     // Busca contagem de candidatos por vaga
     const ids = minhasVagas.map(v => v.id);
-    const { data: counts } = await sb.from('candidaturas').select('vaga_id').in('vaga_id', ids);
+    const { data: counts, error: countsError } = await sb.from('candidaturas').select('vaga_id').in('vaga_id', ids);
+    if (countsError) console.error('[Portal R&S] Erro ao buscar contagem de candidatos:', countsError);
     const cMap = {};
     (counts || []).forEach(c => { cMap[c.vaga_id] = (cMap[c.vaga_id] || 0) + 1; });
 
@@ -901,11 +902,16 @@ async function abrirVagaRs(vagaId, el) {
   document.getElementById('rsCandidatosView').style.display = 'block';
   document.getElementById('rsKanbanWrap').innerHTML = '<div class="loading">Carregando candidatos...</div>';
 
-  const { data: cands } = await sb.from('candidaturas')
+  const { data: cands, error: candsError } = await sb.from('candidaturas')
     .select('id, nome, etapa, classificacao, pontuacao_total, analise')
     .eq('vaga_id', vagaId)
     .order('nome');
 
+  if (candsError) {
+    console.error('[Portal R&S] Erro ao buscar candidatos:', candsError);
+    document.getElementById('rsKanbanWrap').innerHTML = `<div class="empty" style="color:var(--red)">Erro ao carregar candidatos: ${candsError.message}<br><small>Verifique as permissões RLS no Supabase.</small></div>`;
+    return;
+  }
   renderKanbanRs(cands || []);
 }
 
