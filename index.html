@@ -634,12 +634,18 @@ function showTab(tab, btn) {
 // ================================================================
 async function loadTime() {
   try {
-    const snap = await db.collection('colaboradores').where('lider', '==', S.leader.name).get();
-    allColabs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Carrega todos e filtra localmente para evitar problemas de índice
+    const snap = await db.collection('colaboradores').get();
+    const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const meuNome = S.leader.name.trim().toLowerCase();
+    allColabs = S.leader.isAdmin
+      ? todos
+      : todos.filter(c => (c.lider || '').trim().toLowerCase() === meuNome);
     renderTimeKpis();
     renderTimeTable(allColabs);
   } catch(e) {
-    document.getElementById('timeWrap').innerHTML = '<div class="empty">Erro ao carregar colaboradores.</div>';
+    console.error('loadTime error:', e);
+    document.getElementById('timeWrap').innerHTML = `<div class="empty">Erro ao carregar colaboradores.<br><small>${e.message}</small></div>`;
   }
 }
 
@@ -995,18 +1001,22 @@ async function excluirAusencia(id) {
 // ================================================================
 // PDI
 // ================================================================
-function _pdiQuery(collection) {
-  const q = db.collection(collection);
-  return S.leader.isAdmin ? q : q.where('lider', '==', S.leader.name);
+// Filtra localmente para evitar dependência de índices compostos no Firestore
+function _filterByLider(list) {
+  if (S.leader.isAdmin) return list;
+  const meuNome = S.leader.name.trim().toLowerCase();
+  return list.filter(x => (x.lider || '').trim().toLowerCase() === meuNome);
 }
 
 async function loadPdi() {
   try {
-    const snap = await _pdiQuery('pdi').orderBy('data_cadastro', 'desc').get();
-    allPdi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await db.collection('pdi').get();
+    allPdi = _filterByLider(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    allPdi.sort((a,b) => (b.data_cadastro||'').localeCompare(a.data_cadastro||''));
     renderPdi(allPdi);
   } catch(e) {
-    document.getElementById('pdiWrap').innerHTML = '<div class="empty">Erro ao carregar PDIs.</div>';
+    console.error('loadPdi:', e);
+    document.getElementById('pdiWrap').innerHTML = `<div class="empty">Erro ao carregar PDIs.<br><small>${e.message}</small></div>`;
   }
 }
 
@@ -1229,11 +1239,13 @@ function _fillFbColabSelect(selectedNome) {
 
 async function loadFeedbacks() {
   try {
-    const snap = await _pdiQuery('feedbacks').orderBy('data', 'desc').get();
-    allFeedbacks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await db.collection('feedbacks').get();
+    allFeedbacks = _filterByLider(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    allFeedbacks.sort((a,b) => (b.data||'').localeCompare(a.data||''));
     renderFeedbacks(allFeedbacks);
   } catch(e) {
-    document.getElementById('fbWrap').innerHTML = '<div class="empty">Erro ao carregar feedbacks.</div>';
+    console.error('loadFeedbacks:', e);
+    document.getElementById('fbWrap').innerHTML = `<div class="empty">Erro ao carregar feedbacks.<br><small>${e.message}</small></div>`;
   }
 }
 
@@ -1377,11 +1389,13 @@ function toggleDesenvCampos() {
 
 async function loadDesenv() {
   try {
-    const snap = await _pdiQuery('desenvolvimento').orderBy('data', 'desc').get();
-    allDesenv = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const snap = await db.collection('desenvolvimento').get();
+    allDesenv = _filterByLider(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    allDesenv.sort((a,b) => (b.data||'').localeCompare(a.data||''));
     renderDesenv(allDesenv);
   } catch(e) {
-    document.getElementById('desenvWrap').innerHTML = '<div class="empty">Erro ao carregar histórico.</div>';
+    console.error('loadDesenv:', e);
+    document.getElementById('desenvWrap').innerHTML = `<div class="empty">Erro ao carregar histórico.<br><small>${e.message}</small></div>`;
   }
 }
 
