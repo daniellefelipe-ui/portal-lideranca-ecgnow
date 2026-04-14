@@ -903,13 +903,13 @@ async function abrirVagaRs(vagaId, el) {
   document.getElementById('rsKanbanWrap').innerHTML = '<div class="loading">Carregando candidatos...</div>';
 
   const { data: cands, error: candsError } = await sb.from('candidaturas')
-    .select('id, nome, etapa, classificacao, pontuacao_total, analise')
+    .select('id, nome, etapa, disc_perfil, analises_cv(classificacao, pontos_positivos, alertas, resumo_profissional, justificativa_classificacao)')
     .eq('vaga_id', vagaId)
     .order('nome');
 
   if (candsError) {
     console.error('[Portal R&S] Erro ao buscar candidatos:', candsError);
-    document.getElementById('rsKanbanWrap').innerHTML = `<div class="empty" style="color:var(--red)">Erro ao carregar candidatos: ${candsError.message}<br><small>Verifique as permissões RLS no Supabase.</small></div>`;
+    document.getElementById('rsKanbanWrap').innerHTML = `<div class="empty" style="color:var(--red)">Erro ao carregar candidatos: ${candsError.message}</div>`;
     return;
   }
   renderKanbanRs(cands || []);
@@ -931,12 +931,11 @@ function renderKanbanRs(cands) {
   wrap.innerHTML = `<div class="rs-kanban">${RS_ETAPAS.map(et => {
     const lista = grupos[et.k] || [];
     const cards = lista.map(c => {
-      const cl = c.classificacao || '';
+      const cl = c.analises_cv?.classificacao || '';
       const clCor = cl.includes('Alta') ? '#15803d' : cl.includes('Média') ? '#d97706' : cl.includes('Baixa') ? '#dc2626' : '#64748b';
       return `<div class="rs-kcard" onclick="abrirCandidatoRs('${c.id}')">
         <div class="rs-kcard-name">${c.nome || '—'}</div>
-        <div class="rs-kcard-sub" style="color:${clCor}">${cl || '—'}</div>
-        ${c.pontuacao_total ? `<div class="rs-kcard-sub">${c.pontuacao_total}%</div>` : ''}
+        ${cl ? `<div class="rs-kcard-sub" style="color:${clCor}">${cl}</div>` : ''}
       </div>`;
     }).join('');
     return `<div class="rs-kcol rs-kcol-${et.k}">
@@ -948,32 +947,37 @@ function renderKanbanRs(cands) {
 
 async function abrirCandidatoRs(id) {
   const { data: c } = await sb.from('candidaturas')
-    .select('id, nome, etapa, classificacao, pontuacao_total, analise, email, telefone, linkedin_url, cv_url, disc_perfil')
+    .select('id, nome, etapa, email, telefone, linkedin_url, cv_url, disc_perfil, analises_cv(classificacao, justificativa_classificacao, resumo_profissional, pontos_positivos, alertas)')
     .eq('id', id).single();
   if (!c) return;
 
   const etapaAtual = RS_ETAPAS.find(e => e.k === c.etapa) || RS_ETAPAS[0];
   const proximas = RS_ETAPAS.filter(e => e.k !== c.etapa);
-  const analise = c.analise || {};
-  const clCor = (c.classificacao||'').includes('Alta') ? 'var(--green)' : (c.classificacao||'').includes('Média') ? 'var(--amber)' : 'var(--red)';
+  const analise = c.analises_cv || {};
+  const cl = analise.classificacao || '';
+  const clCor = cl.includes('Alta') ? 'var(--green)' : cl.includes('Média') ? 'var(--amber)' : cl.includes('Baixa') ? 'var(--red)' : 'var(--muted)';
 
-  // Abre modal de detalhe
   document.getElementById('colabDetalheName').textContent = c.nome || '—';
-  document.getElementById('colabDetalheMeta').textContent = `${etapaAtual.l}${c.classificacao ? ' · ' + c.classificacao : ''}`;
+  document.getElementById('colabDetalheMeta').textContent = `${etapaAtual.l}${cl ? ' · ' + cl : ''}`;
 
-  // Reusa o modal de detalhe mas com conteúdo de candidato
   document.getElementById('colabDetalheModal').classList.add('open');
   document.querySelector('.colab-tabs').style.display = 'none';
   document.querySelectorAll('.colab-tab-content').forEach(el => el.classList.remove('active'));
   document.getElementById('colabTab-pdi').classList.add('active');
+
+  const posArr = Array.isArray(analise.pontos_positivos) ? analise.pontos_positivos : [];
+  const altArr = Array.isArray(analise.alertas) ? analise.alertas : [];
+
   document.getElementById('colabTab-pdi').innerHTML = `
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
-      ${c.pontuacao_total ? `<div class="kpi" style="flex:1;min-width:100px"><div class="kpi-val" style="color:${clCor}">${c.pontuacao_total}%</div><div class="kpi-lbl">Compatibilidade</div></div>` : ''}
+      ${cl ? `<div class="kpi" style="flex:1;min-width:120px"><div class="kpi-val" style="font-size:1rem;color:${clCor}">${cl}</div><div class="kpi-lbl">Classificação</div></div>` : ''}
       ${c.disc_perfil ? `<div class="kpi" style="flex:1;min-width:100px"><div class="kpi-val" style="font-size:1.2rem">${c.disc_perfil}</div><div class="kpi-lbl">Perfil DISC</div></div>` : ''}
     </div>
-    ${analise.pontos_fortes ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--green)">Pontos fortes</div><p style="font-size:.85rem;line-height:1.6">${analise.pontos_fortes}</p></div>` : ''}
-    ${analise.pontos_atencao ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--amber)">Pontos de atenção</div><p style="font-size:.85rem;line-height:1.6">${analise.pontos_atencao}</p></div>` : ''}
-    ${analise.recomendacao ? `<div style="margin-bottom:16px"><div class="form-label2">Recomendação</div><p style="font-size:.85rem;line-height:1.6">${analise.recomendacao}</p></div>` : ''}
+    ${analise.resumo_profissional ? `<div style="margin-bottom:12px"><div class="form-label2">Resumo</div><p style="font-size:.85rem;line-height:1.6">${analise.resumo_profissional}</p></div>` : ''}
+    ${posArr.length ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--green)">Pontos positivos</div><ul style="font-size:.85rem;line-height:1.7;padding-left:16px">${posArr.map(p=>`<li>${p}</li>`).join('')}</ul></div>` : ''}
+    ${altArr.length ? `<div style="margin-bottom:12px"><div class="form-label2" style="color:var(--amber)">Alertas</div><ul style="font-size:.85rem;line-height:1.7;padding-left:16px">${altArr.map(a=>`<li>${a}</li>`).join('')}</ul></div>` : ''}
+    ${analise.justificativa_classificacao ? `<div style="margin-bottom:16px"><div class="form-label2">Justificativa</div><p style="font-size:.85rem;line-height:1.6">${analise.justificativa_classificacao}</p></div>` : ''}
+    ${!cl && !analise.resumo_profissional ? `<div style="text-align:center;padding:20px;color:var(--muted);font-size:.85rem">Currículo ainda não analisado</div>` : ''}
     <div style="border-top:1px solid var(--border);padding-top:14px">
       <div class="form-label2" style="margin-bottom:8px">Mover para etapa</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -984,7 +988,6 @@ async function abrirCandidatoRs(id) {
       ${c.cv_url ? `<a href="${c.cv_url}" target="_blank" class="btn btn-outline btn-sm">📄 Ver CV</a>` : ''}
       ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" class="btn btn-outline btn-sm">🔗 LinkedIn</a>` : ''}
     </div>`;
-  // Guarda id para mover etapa
   document.getElementById('colabDetalheModal').dataset.candidatoId = c.id;
 }
 
