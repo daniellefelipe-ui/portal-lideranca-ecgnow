@@ -6,6 +6,7 @@
 <title>Portal da Liderança — ECGNow</title>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -609,14 +610,17 @@ function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
   document.getElementById('headerLeader').textContent = S.leader.name + ' · ' + S.leader.setor;
-  loadTime();
-  loadEsat();
-  loadCargos();
-  loadRs();
-  renderAusencias();
-  loadPdi();
-  loadFeedbacks();
-  loadDesenv();
+  // Login anônimo no Firebase para passar nas regras de segurança do Firestore
+  firebase.auth().signInAnonymously().catch(() => {}).finally(() => {
+    loadTime();
+    loadEsat();
+    loadCargos();
+    loadRs();
+    renderAusencias();
+    loadPdi();
+    loadFeedbacks();
+    loadDesenv();
+  });
 }
 
 // ================================================================
@@ -828,11 +832,13 @@ function filterCargos() {
 async function loadRs() {
   const wrap = document.getElementById('rsWrap');
   try {
-    const { data: vagas } = await sb.from('vagas').select('*').eq('status', 'ativa').order('created_at', { ascending: false });
-    if (!vagas?.length) { wrap.innerHTML = '<div class="empty">Nenhuma vaga aberta no momento.</div>'; return; }
+    const { data: vagas, error: vagasError } = await sb.from('vagas').select('*').order('created_at', { ascending: false });
+    if (vagasError) throw vagasError;
+    const vagasAbertas = (vagas || []).filter(v => v.status && /^aberta|^ativa/i.test(v.status));
+    if (!vagasAbertas.length) { wrap.innerHTML = '<div class="empty">Nenhuma vaga aberta no momento.</div>'; return; }
     wrap.innerHTML = `<div class="table-wrap"><table>
       <thead><tr><th>Vaga</th><th>Departamento</th><th>Localização</th><th>Tipo</th><th>Abertura</th></tr></thead>
-      <tbody>${vagas.map(v => `<tr>
+      <tbody>${vagasAbertas.map(v => `<tr>
         <td><strong>${v.titulo || '—'}</strong></td>
         <td>${v.departamento || v.setor || '—'}</td>
         <td>${v.localizacao || '—'}</td>
