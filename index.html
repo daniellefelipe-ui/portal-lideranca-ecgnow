@@ -1933,7 +1933,7 @@ async function deleteDesenv(id) {
 // ================================================================
 function renderEcgResultadoPortal(testeEcg, candidaturaId) {
   const pct = testeEcg.total_pct ?? 0;
-  const aprovado = testeEcg.aprovado ?? pct >= 75;
+  const aprovado = pct >= 75;
   const cor = aprovado ? '#16a34a' : '#dc2626';
   const comentario = testeEcg.comentario || '';
   const questoes = testeEcg.questoes || [];
