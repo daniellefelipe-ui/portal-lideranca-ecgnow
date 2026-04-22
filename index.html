@@ -518,17 +518,22 @@
 // CONFIG
 // ================================================================
 const LEADERS = [
-  { id: 1,  name: 'Mayara Luize Almeida Gomes Silva',  setor: 'Financeiro',               pin: '1703' },
-  { id: 2,  name: 'Bruno Franciulli Maia',             setor: 'Operação Holter',          pin: '2080' },
-  { id: 3,  name: 'Danielle Felipe Pereira',           setor: 'Gente & Cultura',          pin: '1511', isAdmin: true },
-  { id: 4,  name: 'Renner Lariucci',                   setor: 'Operação Holter',          pin: '1606' },
-  { id: 5,  name: 'Marco Antonio Bustamante de Lima',  setor: 'Gestão',                   pin: '1742' },
-  { id: 6,  name: 'Gabriel Cesar Romanini de Paula',   setor: 'Gestão',                   pin: '1603' },
-  { id: 7,  name: 'Vinicius Pinto dos Santos',         setor: 'Tecnologia da Informação', pin: '2317' },
-  { id: 8,  name: 'Rodrigo Aramis da Silva',           setor: 'Comercial',                pin: '1744' },
-  { id: 9,  name: 'Aline Alves Silveira',              setor: 'Educação',                 pin: '1305' },
-  { id: 10, name: 'Barbara Braga Duarte de Souza',     setor: 'Sucesso do Cliente',       pin: '8954' },
+  { id: 1,  name: 'Mayara Luize Almeida Gomes Silva',  setor: 'Financeiro',               pinHash: 'a860d24f31d82a4fbf73c4239d615936fcdfbd6d08319ba3807303469a0a35d1' },
+  { id: 2,  name: 'Bruno Franciulli Maia',             setor: 'Operação Holter',          pinHash: '4e49800fbc3cefb76b1b887fa36a8dbd6dd283667258c613e1754fa3d266fefb' },
+  { id: 3,  name: 'Danielle Felipe Pereira',           setor: 'Gente & Cultura',          pinHash: '0d0c9bc37ae955b26c8bfecc22fcd072c4ea5ce95947a5051b5ed7399bff4f2e', isAdmin: true },
+  { id: 4,  name: 'Renner Lariucci',                   setor: 'Operação Holter',          pinHash: '25d114d44f1ee498521f51cd12e524e8fd6e67c82a9d21fc29c0bbc7fff457c4' },
+  { id: 5,  name: 'Marco Antonio Bustamante de Lima',  setor: 'Gestão',                   pinHash: 'e85cdd30a33c8fbee53826f320976004b87d7f4660d2b2743cb2d39ce23da5f1' },
+  { id: 6,  name: 'Gabriel Cesar Romanini de Paula',   setor: 'Gestão',                   pinHash: 'bf0a60ee19adc7954e2248d0c4fd7fed44671ea2cff24a6c75127f9ce0183608' },
+  { id: 7,  name: 'Vinicius Pinto dos Santos',         setor: 'Tecnologia da Informação', pinHash: '2a3d4a80aa7481df2d65446bdc5b55a5eec9d940aa44b326882fceac780b24d0' },
+  { id: 8,  name: 'Rodrigo Aramis da Silva',           setor: 'Comercial',                pinHash: '0c75ccaac2812081198391f595e46d12ec1d3cbb0f5aa664e6631f110ae4526c' },
+  { id: 9,  name: 'Aline Alves Silveira',              setor: 'Educação',                 pinHash: 'c7f4f146491d27eed1cd4d422c9b3fec37006c606b17dabbfebef85845f3cbc1' },
+  { id: 10, name: 'Barbara Braga Duarte de Souza',     setor: 'Sucesso do Cliente',       pinHash: '3a5181a6f8e67d3e7c1561c0d1fbe7b8ba02315f57b00adb0d5170e5e1981111' },
 ];
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 firebase.initializeApp({
   apiKey: 'AIzaSyBopJe43OvWuA-vuHWGCTqQ_ApreNf_kWA',
@@ -588,19 +593,26 @@ function tipoBadge(t) {
 
 document.getElementById('loginPin').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
 
-function handleLogin() {
+async function handleLogin() {
   const id  = parseInt(document.getElementById('loginName').value);
   const pin = document.getElementById('loginPin').value.trim();
   const err = document.getElementById('loginError');
+  const btn = document.querySelector('.btn-login');
   const leader = LEADERS.find(l => l.id === id);
-  if (!leader || leader.pin !== pin) {
+  if (!leader) { err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  const hash = await sha256(pin);
+  if (hash !== leader.pinHash) {
     err.style.display = 'block';
     document.getElementById('loginPin').value = '';
+    btn.disabled = false; btn.textContent = 'Entrar';
     return;
   }
   err.style.display = 'none';
-  S.leader = leader;
-  localStorage.setItem('portal_leader', JSON.stringify(leader));
+  const { pinHash: _, ...leaderSafe } = leader;
+  S.leader = leaderSafe;
+  localStorage.setItem('portal_leader', JSON.stringify(leaderSafe));
+  btn.disabled = false; btn.textContent = 'Entrar';
   showApp();
 }
 
@@ -617,8 +629,12 @@ function handleLogout() {
   if (saved) {
     try {
       const l = JSON.parse(saved);
-      const valid = LEADERS.find(x => x.id === l.id && x.pin === l.pin);
-      if (valid) { S.leader = valid; showApp(); return; }
+      const valid = LEADERS.find(x => x.id === l.id);
+      if (valid) {
+        const { pinHash: _, ...leaderSafe } = valid;
+        S.leader = { ...leaderSafe, ...l };
+        showApp(); return;
+      }
     } catch(e) {}
   }
 })();
